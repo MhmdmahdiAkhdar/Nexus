@@ -3,6 +3,11 @@
 import {useState} from "react";
 import {Mail,Lock,ArrowRight,KeyRound,ShieldCheck} from "lucide-react";
 
+
+// const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = "http://localhost:5074";
+console.log("API_URL is:", API_URL);
+
 export default function Loginpage(){
     const [email,setEmail]=useState("");
     const [password,setPassword]=useState("");
@@ -10,26 +15,30 @@ export default function Loginpage(){
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
         e.preventDefault();
         try{
-          const response= await fetch("http://localhost:3000/api/auth/login",{
+          const response= await fetch(`${API_URL}/api/auth/login`,{
             method:"POST",
             headers:{
               "Content-Type":"application/json",
             },
-            credentials:"include",
             body:JSON.stringify({email,password}),
           });
 
           const data = await response.json();
           if(!response.ok){
-            alert("Login failed. Please check your credentials");
+            alert(data?.message ?? "Login failed. Please check your credentials");
             return;
           }
-          
+
           console.log("Login", data);
+
+          // Save the token so authenticated requests (like change-password) can use it
+          localStorage.setItem("nexus_token", data.token);
+          localStorage.setItem("nexus_user", JSON.stringify(data));
 
           window.location.href="/dashboard";
 
         }catch(error){
+          console.error(error);
           alert("Login failed. Please check your credentials");
         }
     }
@@ -148,5 +157,5 @@ return (
       </div>
     </div>
   );
-    
+
 }
