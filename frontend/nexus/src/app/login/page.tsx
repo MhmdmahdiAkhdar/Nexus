@@ -4,9 +4,9 @@ import {useState} from "react";
 import {Mail,Lock,ArrowRight,KeyRound,ShieldCheck} from "lucide-react";
 
 
-// const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const API_URL = "http://localhost:5074";
-console.log("API_URL is:", API_URL);
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+// const API_URL = "http://localhost:5074";
+// console.log("API_URL is:", API_URL);
 
 export default function Loginpage(){
     const [email,setEmail]=useState("");
@@ -35,7 +35,11 @@ export default function Loginpage(){
           localStorage.setItem("nexus_token", data.token);
           localStorage.setItem("nexus_user", JSON.stringify(data));
 
-          window.location.href="/dashboard";
+          if (data.mustChangePassword) {
+            window.location.href = "/change-password";
+          } else {
+            window.location.href = "/dashboard";
+          }
 
         }catch(error){
           console.error(error);

@@ -74,9 +74,9 @@ public class DatabaseSeeder
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(config.Password, workFactor: 11);
 
-        await connection.ExecuteAsync(
-            @"INSERT INTO Users (Email, PasswordHash, FullName, RoleId, IsActive, CreatedAt)
-              VALUES (@Email, @PasswordHash, @FullName, @RoleId, TRUE, UTC_TIMESTAMP());",
+                await connection.ExecuteAsync(
+            @"INSERT INTO Users (Email, PasswordHash, FullName, RoleId, IsActive, MustChangePassword, CreatedAt)
+              VALUES (@Email, @PasswordHash, @FullName, @RoleId, TRUE, TRUE, UTC_TIMESTAMP());",
             new
             {
                 config.Email,
