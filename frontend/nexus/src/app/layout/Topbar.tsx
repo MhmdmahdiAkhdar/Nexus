@@ -3,15 +3,36 @@
 import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 
+interface StoredUser {
+  fullName: string;
+  roleName: string;
+}
+
 export default function Topbar() {
   const [time, setTime] = useState("");
+  const [user, setUser] = useState<StoredUser | null>(null);
 
   useEffect(() => {
     const update = () => setTime(new Date().toLocaleTimeString("en-GB"));
     update();
     const interval = setInterval(update, 1000);
+
+    const stored = localStorage.getItem("nexus_user");
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
+
     return () => clearInterval(interval);
   }, []);
+
+  const initials = user?.fullName
+    ? user.fullName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "?";
 
   return (
     <header className="h-12 bg-[#0B1E3A] text-white flex items-center justify-between px-8 text-xs font-mono">
@@ -27,11 +48,13 @@ export default function Topbar() {
         </button>
         <div className="flex items-center gap-2.5">
           <div className="text-right">
-            <div className="text-xs font-medium leading-none">Maya Aoun</div>
-            <div className="text-[10px] text-white/40 mt-1 tracking-wide">OPS · ADMIN</div>
+            <div className="text-xs font-medium leading-none">{user?.fullName ?? "Not logged in"}</div>
+            <div className="text-[10px] text-white/40 mt-1 tracking-wide">
+              {user?.roleName?.toUpperCase() ?? ""}
+            </div>
           </div>
           <div className="w-7 h-7 rounded-full bg-[#3F84E5] flex items-center justify-center text-[11px] font-semibold">
-            MA
+            {initials}
           </div>
         </div>
       </div>

@@ -23,8 +23,6 @@ public class AuthService : IAuthService
     {
         var user = await _userRepository.GetByEmailAsync(email);
 
-        // Deliberately vague on failure (no "user not found" vs "wrong password" distinction)
-        // so the login endpoint doesn't leak which emails are registered.
         if (user is null || !user.IsActive)
             return null;
 
@@ -32,6 +30,7 @@ public class AuthService : IAuthService
             return null;
 
         var (token, expiresAt) = GenerateToken(user.Id, user.Email, user.RoleId);
+        var roleName = await _userRepository.GetRoleNameByIdAsync(user.RoleId);
 
         return new LoginResponse
         {
@@ -41,6 +40,7 @@ public class AuthService : IAuthService
             Email = user.Email,
             FullName = user.FullName,
             RoleId = user.RoleId,
+            RoleName = roleName ?? "Unknown",
             MustChangePassword = user.MustChangePassword
         };
     }

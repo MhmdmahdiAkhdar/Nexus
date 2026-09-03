@@ -10,6 +10,7 @@ import {
   UsersRound,
   FileText,
   ShieldCheck,
+  Settings,
 } from "lucide-react";
 
 const navItems = [
@@ -42,6 +43,11 @@ const navItems = [
     label: "Reference index",
     href: "/documents",
     icon: FileText,
+  },
+  {
+    label: "Settings",
+    href: "/settings",
+    icon: Settings,
   },
 ];
 

@@ -39,8 +39,6 @@ public class UserRepository : IUserRepository
 
     public async Task UpdatePasswordHashAsync(int userId, string newPasswordHash)
     {
-        // Clearing MustChangePassword here too: any successful password change — whether
-        // it was mandatory or voluntary — satisfies the "must change" requirement.
         const string sql = @"
             UPDATE Users
             SET PasswordHash = @PasswordHash, MustChangePassword = FALSE, UpdatedAt = UTC_TIMESTAMP()
@@ -48,5 +46,13 @@ public class UserRepository : IUserRepository
 
         using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(sql, new { PasswordHash = newPasswordHash, Id = userId });
+    }
+
+        public async Task<string?> GetRoleNameByIdAsync(int roleId)
+    {
+        const string sql = "SELECT Name FROM Roles WHERE Id = @RoleId LIMIT 1;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        return await connection.QueryFirstOrDefaultAsync<string>(sql, new { RoleId = roleId });
     }
 }

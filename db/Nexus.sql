@@ -190,3 +190,5 @@ ALTER TABLE `TeamMembers` ADD FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`
 ALTER TABLE `ProductResponsibilities` ADD FOREIGN KEY (`ProductId`) REFERENCES `Products` (`Id`);
 ALTER TABLE `ProductResponsibilities` ADD FOREIGN KEY (`TeamMemberId`) REFERENCES `TeamMembers` (`Id`);
 ALTER TABLE `ProductResponsibilities` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`);
+
+ALTER TABLE `Users` ADD COLUMN `MustChangePassword` BOOLEAN NOT NULL DEFAULT TRUE;

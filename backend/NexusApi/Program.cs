@@ -8,15 +8,13 @@ using NexusApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers + OpenAPI
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// Data access
 builder.Services.AddSingleton<IDbConnectionFactory, MySqlConnectionFactory>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 
-// Business logic
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Startup seeding (creates the Admin + a normal test user if they don't already exist)
@@ -46,7 +44,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// CORS for the React frontend during development
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -59,7 +56,6 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Run the seed once at startup (safe to run every time — no-op after the first run).
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();

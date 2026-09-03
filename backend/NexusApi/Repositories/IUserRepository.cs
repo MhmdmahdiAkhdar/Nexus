@@ -7,4 +7,5 @@ public interface IUserRepository
     Task<User?> GetByEmailAsync(string email);
     Task<User?> GetByIdAsync(int id);
     Task UpdatePasswordHashAsync(int userId, string newPasswordHash);
+    Task<string?> GetRoleNameByIdAsync(int roleId);
 }
