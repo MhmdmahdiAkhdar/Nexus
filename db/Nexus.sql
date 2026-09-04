@@ -192,3 +192,4 @@ ALTER TABLE `ProductResponsibilities` ADD FOREIGN KEY (`TeamMemberId`) REFERENCE
 ALTER TABLE `ProductResponsibilities` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`);
 
 ALTER TABLE `Users` ADD COLUMN `MustChangePassword` BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE `Products` ADD COLUMN `OwningTeam` VARCHAR(255) NULL AFTER `Technologies`;
