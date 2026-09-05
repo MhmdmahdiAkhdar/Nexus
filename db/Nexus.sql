@@ -193,3 +193,11 @@ ALTER TABLE `ProductResponsibilities` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `
 
 ALTER TABLE `Users` ADD COLUMN `MustChangePassword` BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE `Products` ADD COLUMN `OwningTeam` VARCHAR(255) NULL AFTER `Technologies`;
+
+ALTER TABLE `Clients`
+  ADD COLUMN `Industry` VARCHAR(255) NULL AFTER `Country`,
+  ADD COLUMN `PrimaryContactName` VARCHAR(255) NULL AFTER `Industry`,
+  ADD COLUMN `PrimaryContactEmail` VARCHAR(255) NULL AFTER `PrimaryContactName`,
+  ADD COLUMN `SupportPhone` VARCHAR(255) NULL AFTER `PrimaryContactEmail`,
+  ADD COLUMN `RegisteredOffice` VARCHAR(255) NULL AFTER `SupportPhone`,
+  ADD COLUMN `AccountOwner` VARCHAR(255) NULL AFTER `RegisteredOffice`; 
