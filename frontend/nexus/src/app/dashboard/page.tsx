@@ -10,9 +10,12 @@ import { Plus, AlertCircle, ShieldCheck } from "lucide-react";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface DashboardStats {
+  totalProducts: number;
   activeProducts: number;
   clientCompanies: number;
+  totalDeployments: number;
   liveDeployments: number;
+  totalTeamMembers: number;
   pendingItems: number;
 }
 
@@ -137,21 +140,31 @@ export default function DashboardPage() {
 
   const statCards = stats
     ? [
-        { label: "Active products", value: stats.activeProducts },
-        { label: "Client companies", value: stats.clientCompanies },
-        { label: "Live deployments", value: stats.liveDeployments },
-        { label: "Pending items", value: stats.pendingItems },
+        { label: "Total products", value: stats.totalProducts, href: "/products" },
+        { label: "Active products", value: stats.activeProducts, href: "/products" },
+        { label: "Client companies", value: stats.clientCompanies, href: "/clients" },
+        { label: "Total deployments", value: stats.totalDeployments, href: "/deployments" },
+        { label: "Live deployments", value: stats.liveDeployments, href: "/deployments" },
+        { label: "Team members", value: stats.totalTeamMembers, href: "/team" },
       ]
     : [];
 
   return (
-    <div className="flex min-h-screen bg-[#F4F0E8]">
+    <div className="flex min-h-screen bg-[#f9fafb]">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
+        <main
+          className="flex-1 px-[30px] pt-[30px] pb-10"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+            backgroundColor: "#f9fafb",
+          }}
+        >
           <div className="flex items-end justify-between">
             <div>
               <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">
@@ -180,16 +193,20 @@ export default function DashboardPage() {
           {loading ? (
             <div className="text-[11px] text-[#7A8FA4] mb-7">Loading dashboard…</div>
           ) : (
-            <div className="grid grid-cols-4 mb-7">
+            <div className="grid grid-cols-3 gap-y-6 mb-7">
               {statCards.map((stat) => (
-                <div key={stat.label} className="border-l-2 border-[#C2762E] pl-3 min-h-[63px]">
+                <a
+                  key={stat.label}
+                  href={stat.href}
+                  className="border-l-2 border-[#C2762E] pl-3 min-h-[63px] block hover:opacity-70 transition-opacity"
+                >
                   <div className="text-[9px] uppercase tracking-[0.14em] font-mono text-[#698097] mb-2">
                     {stat.label}
                   </div>
                   <div className="text-[22px] leading-none font-semibold text-[#0B1E3A]">
                     {stat.value}
                   </div>
-                </div>
+                </a>
               ))}
             </div>
           )}

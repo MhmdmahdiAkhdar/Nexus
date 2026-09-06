@@ -17,24 +17,22 @@ public class DashboardRepository : IDashboardRepository
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        var activeProducts = await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM Products WHERE LifecycleStatus = 'Active';");
-
-        var clientCompanies = await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM Clients;");
-
-        var liveDeployments = await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM Deployments WHERE DeploymentStatus = 'Live';");
-
-        // Assumption: "pending items" = deployments not live yet (Pilot / In Progress).
-        var pendingItems = await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM Deployments WHERE DeploymentStatus IN ('Pilot', 'In Progress');");
+        var totalProducts = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Products;");
+        var activeProducts = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Products WHERE LifecycleStatus = 'Active';");
+        var clientCompanies = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Clients;");
+        var totalDeployments = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Deployments;");
+        var liveDeployments = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Deployments WHERE DeploymentStatus = 'Live';");
+        var totalTeamMembers = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM TeamMembers WHERE Status = 'Active';");
+        var pendingItems = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Deployments WHERE DeploymentStatus IN ('Pilot', 'In Progress');");
 
         return new DashboardStatsResponse
         {
+            TotalProducts = totalProducts,
             ActiveProducts = activeProducts,
             ClientCompanies = clientCompanies,
+            TotalDeployments = totalDeployments,
             LiveDeployments = liveDeployments,
+            TotalTeamMembers = totalTeamMembers,
             PendingItems = pendingItems
         };
     }
@@ -51,7 +49,7 @@ public class DashboardRepository : IDashboardRepository
         return await connection.QueryAsync<RecentProductResponse>(sql, new { Limit = limit });
     }
 
-        public async Task<IEnumerable<AttentionItemResponse>> GetAttentionItemsAsync(int limit)
+    public async Task<IEnumerable<AttentionItemResponse>> GetAttentionItemsAsync(int limit)
     {
         const string sql = @"
             SELECT
@@ -71,7 +69,7 @@ public class DashboardRepository : IDashboardRepository
         return await connection.QueryAsync<AttentionItemResponse>(sql, new { Limit = limit });
     }
 
-        public async Task<EnvironmentReadinessResponse> GetEnvironmentReadinessAsync()
+    public async Task<EnvironmentReadinessResponse> GetEnvironmentReadinessAsync()
     {
         using var connection = _connectionFactory.CreateConnection();
 

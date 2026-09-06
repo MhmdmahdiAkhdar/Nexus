@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Users, Layers, X } from "lucide-react";
+import { Users, Layers, X, Trash2, Pencil, GitBranch } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
 
@@ -20,6 +20,7 @@ interface ProductDetail {
   supportedMarkets: string | null;
   technologies: string | null;
   owningTeam: string | null;
+  notes: string | null;
   deployedClientsCount: number;
   responsiblePeople: {
     responsibilityId: number;
@@ -69,6 +70,14 @@ interface RepositoryOption {
   name: string;
 }
 
+interface RepositoryFull {
+  id: number;
+  name: string;
+  gitHubUrl: string;
+  mainBranch: string | null;
+  description: string | null;
+}
+
 const TABS = ["Overview", "Deployments", "Documents", "Activity"] as const;
 type Tab = (typeof TABS)[number];
 
@@ -92,9 +101,13 @@ export default function ProductDossierPage() {
   const [activity, setActivity] = useState<ActivityItem[] | null>(null);
 
   const [showAddModule, setShowAddModule] = useState(false);
+  const [editingModule, setEditingModule] = useState<ProductDetail["modules"][number] | null>(null);
   const [showManageResp, setShowManageResp] = useState(false);
   const [showLogUpdate, setShowLogUpdate] = useState(false);
   const [showAddDocument, setShowAddDocument] = useState(false);
+  const [showManageRepos, setShowManageRepos] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const loadDetail = useCallback(async () => {
     const response = await fetch(`${API_URL}/api/products/${productId}`, { headers: authHeaders() });
@@ -147,6 +160,28 @@ export default function ProductDossierPage() {
     }
     loadTabData();
   }, [tab, productId, deployments, documents, activity]);
+
+  async function handleDeleteModule(moduleId: number) {
+    await fetch(`${API_URL}/api/products/${productId}/modules/${moduleId}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    loadDetail();
+  }
+
+  async function handleDeleteProduct() {
+    setDeleteError("");
+    const res = await fetch(`${API_URL}/api/products/${productId}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      setDeleteError(data?.message ?? "Failed to delete product.");
+      return;
+    }
+    router.push("/products");
+  }
 
   if (loading) {
     return (
@@ -211,6 +246,12 @@ export default function ProductDossierPage() {
             </div>
 
             <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="border border-red-300 text-red-500 text-[13px] font-medium px-3 h-[39px] rounded-md hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors flex items-center gap-1.5"
+              >
+                <Trash2 size={14} /> Delete
+              </button>
               <button
                 onClick={() => router.push(`/products/${productId}/edit`)}
                 className="border border-gray-300 text-gray-700 text-[13px] font-medium px-4 h-[39px] rounded-md hover:bg-gray-50 transition-colors"
@@ -282,6 +323,13 @@ export default function ProductDossierPage() {
                       <div className="text-[11px] text-[#3A4A5A]">{detail.technologies || "—"}</div>
                     </div>
                   </div>
+
+                  {detail.notes && (
+                    <div className="pt-4 mt-4 border-t border-[#E0E1DE]">
+                      <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Notes</div>
+                      <div className="text-[11px] text-[#3A4A5A] whitespace-pre-wrap">{detail.notes}</div>
+                    </div>
+                  )}
                 </section>
 
                 <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-6">
@@ -311,9 +359,33 @@ export default function ProductDossierPage() {
                           {m.description && <div className="text-[10px] text-[#8A99A7]">{m.description}</div>}
                         </div>
                         <span className="text-[9px] font-mono text-[#698097]">{m.status}</span>
+                        <button onClick={() => setEditingModule(m)} className="text-gray-400 hover:text-[#3F84E5]">
+                          <Pencil size={13} />
+                        </button>
+                        <button onClick={() => handleDeleteModule(m.id)} className="text-gray-400 hover:text-red-500">
+                          <Trash2 size={13} />
+                        </button>
                       </div>
                     ))}
                   </div>
+                </section>
+
+                <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono">Source control</div>
+                      <h3 className="text-[14px] font-semibold text-[#0B1E3A] mt-1">Repositories</h3>
+                    </div>
+                    <button
+                      onClick={() => setShowManageRepos(true)}
+                      className="flex items-center gap-1.5 text-[11px] text-[#2874B6] hover:text-[#0B1E3A]"
+                    >
+                      <GitBranch size={13} /> Manage repositories
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-[#8A99A7]">
+                    Repository name, GitHub URL, and main branch are stored here for reference — no automatic sync.
+                  </p>
                 </section>
               </div>
 
@@ -447,11 +519,23 @@ export default function ProductDossierPage() {
       </div>
 
       {showAddModule && (
-        <AddModuleModal
+        <ModuleFormModal
           productId={productId}
           onClose={() => setShowAddModule(false)}
           onSaved={() => {
             setShowAddModule(false);
+            loadDetail();
+          }}
+        />
+      )}
+
+      {editingModule && (
+        <ModuleFormModal
+          productId={productId}
+          existing={editingModule}
+          onClose={() => setEditingModule(null)}
+          onSaved={() => {
+            setEditingModule(null);
             loadDetail();
           }}
         />
@@ -487,33 +571,58 @@ export default function ProductDossierPage() {
           }}
         />
       )}
-    </div>
-  );
-}
 
-function ModalShell({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
-          </button>
+      {showManageRepos && (
+        <ManageRepositoriesModal productId={productId} onClose={() => setShowManageRepos(false)} />
+      )}
+
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Delete this product?</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              This can't be undone. If modules, deployments, repositories, or documents are still linked, the
+              delete will be blocked.
+            </p>
+            {deleteError && <div className="text-xs text-red-600 mb-4">{deleteError}</div>}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium py-2.5 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteProduct}
+                className="flex-1 rounded-lg bg-red-500 text-white text-sm font-medium py-2.5 hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
-        {children}
-      </div>
+      )}
     </div>
   );
 }
 
-function AddModuleModal({ productId, onClose, onSaved }: { productId: string; onClose: () => void; onSaved: () => void }) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("Active");
+function ModuleFormModal({
+  productId,
+  existing,
+  onClose,
+  onSaved,
+}: {
+  productId: string;
+  existing?: { id: number; name: string; description: string | null; status: string };
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [name, setName] = useState(existing?.name ?? "");
+  const [description, setDescription] = useState(existing?.description ?? "");
+  const [status, setStatus] = useState(existing?.status ?? "Active");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -525,13 +634,16 @@ function AddModuleModal({ productId, onClose, onSaved }: { productId: string; on
     }
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_URL}/api/products/${productId}/modules`, {
-        method: "POST",
+      const url = existing
+        ? `${API_URL}/api/products/${productId}/modules/${existing.id}`
+        : `${API_URL}/api/products/${productId}/modules`;
+      const res = await fetch(url, {
+        method: existing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ name, description: description || null, status }),
       });
       if (!res.ok) {
-        setError("Failed to add module.");
+        setError(existing ? "Failed to update module." : "Failed to add module.");
         return;
       }
       onSaved();
@@ -541,30 +653,38 @@ function AddModuleModal({ productId, onClose, onSaved }: { productId: string; on
   }
 
   return (
-    <ModalShell title="Add module" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">NAME</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-gray-900">{existing ? "Edit module" : "Add module"}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={18} />
+          </button>
         </div>
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">DESCRIPTION</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">STATUS</label>
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-            <option>Active</option>
-            <option>In Development</option>
-            <option>Deprecated</option>
-          </select>
-        </div>
-        {error && <div className="text-xs text-red-600">{error}</div>}
-        <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
-          {submitting ? "Adding..." : "Add module"}
-        </button>
-      </form>
-    </ModalShell>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">NAME</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">DESCRIPTION</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">STATUS</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+              <option>Active</option>
+              <option>In Development</option>
+              <option>Deprecated</option>
+            </select>
+          </div>
+          {error && <div className="text-xs text-red-600">{error}</div>}
+          <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
+            {submitting ? "Saving..." : existing ? "Save changes" : "Add module"}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -626,49 +746,58 @@ function ManageResponsibilityModal({
   }
 
   return (
-    <ModalShell title="Manage responsibility" onClose={onClose}>
-      <div className="space-y-2 mb-5">
-        {people.length === 0 && <p className="text-[11px] text-gray-400">No one assigned yet.</p>}
-        {people.map((p) => (
-          <div key={p.responsibilityId} className="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2">
-            <div>
-              <div className="text-[12px] font-medium text-gray-800">{p.fullName}</div>
-              <div className="text-[10px] text-gray-500">{p.responsibility}</div>
-            </div>
-            <button onClick={() => handleRemove(p.responsibilityId)} className="text-[11px] text-red-500 hover:text-red-700">
-              Remove
-            </button>
-          </div>
-        ))}
-      </div>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-gray-900">Manage responsibility</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={18} />
+          </button>
+        </div>
 
-      <form onSubmit={handleAdd} className="space-y-3 border-t border-gray-200 pt-4">
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">TEAM MEMBER</label>
-          <select value={teamMemberId} onChange={(e) => setTeamMemberId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-            <option value="">Select...</option>
-            {teamMembers.map((tm) => (
-              <option key={tm.id} value={tm.id}>
-                {tm.fullName} {tm.jobTitle ? `— ${tm.jobTitle}` : ""}
-              </option>
-            ))}
-          </select>
+        <div className="space-y-2 mb-5">
+          {people.length === 0 && <p className="text-[11px] text-gray-400">No one assigned yet.</p>}
+          {people.map((p) => (
+            <div key={p.responsibilityId} className="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2">
+              <div>
+                <div className="text-[12px] font-medium text-gray-800">{p.fullName}</div>
+                <div className="text-[10px] text-gray-500">{p.responsibility}</div>
+              </div>
+              <button onClick={() => handleRemove(p.responsibilityId)} className="text-[11px] text-red-500 hover:text-red-700">
+                Remove
+              </button>
+            </div>
+          ))}
         </div>
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">RESPONSIBILITY</label>
-          <input
-            value={responsibility}
-            onChange={(e) => setResponsibility(e.target.value)}
-            placeholder="e.g. Product Owner"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-          />
-        </div>
-        {error && <div className="text-xs text-red-600">{error}</div>}
-        <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
-          {submitting ? "Adding..." : "Add responsibility"}
-        </button>
-      </form>
-    </ModalShell>
+
+        <form onSubmit={handleAdd} className="space-y-3 border-t border-gray-200 pt-4">
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">TEAM MEMBER</label>
+            <select value={teamMemberId} onChange={(e) => setTeamMemberId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">Select...</option>
+              {teamMembers.map((tm) => (
+                <option key={tm.id} value={tm.id}>
+                  {tm.fullName} {tm.jobTitle ? `— ${tm.jobTitle}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">RESPONSIBILITY</label>
+            <input
+              value={responsibility}
+              onChange={(e) => setResponsibility(e.target.value)}
+              placeholder="e.g. Product Owner"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
+          {error && <div className="text-xs text-red-600">{error}</div>}
+          <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
+            {submitting ? "Adding..." : "Add responsibility"}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -724,54 +853,63 @@ function LogUpdateModal({ productId, onClose, onSaved }: { productId: string; on
   }
 
   return (
-    <ModalShell title="Log update" onClose={onClose}>
-      {repositories.length === 0 ? (
-        <p className="text-[12px] text-gray-500">
-          This product has no repositories linked yet, so there's nowhere to attach an update log entry.
-        </p>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">REPOSITORY</label>
-            <select value={repositoryId} onChange={(e) => setRepositoryId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">Select...</option>
-              {repositories.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">TITLE</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">DESCRIPTION</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">COMMIT REFERENCE</label>
-            <input value={commitReference} onChange={(e) => setCommitReference(e.target.value)} placeholder="a1b2c3d" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">UPDATED BY</label>
-            <select value={teamMemberId} onChange={(e) => setTeamMemberId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">Select...</option>
-              {teamMembers.map((tm) => (
-                <option key={tm.id} value={tm.id}>
-                  {tm.fullName}
-                </option>
-              ))}
-            </select>
-          </div>
-          {error && <div className="text-xs text-red-600">{error}</div>}
-          <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
-            {submitting ? "Logging..." : "Log update"}
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-gray-900">Log update</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={18} />
           </button>
-        </form>
-      )}
-    </ModalShell>
+        </div>
+        {repositories.length === 0 ? (
+          <p className="text-[12px] text-gray-500">
+            This product has no repositories linked yet, so there's nowhere to attach an update log entry. Add
+            one via "Manage repositories" first.
+          </p>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">REPOSITORY</label>
+              <select value={repositoryId} onChange={(e) => setRepositoryId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                <option value="">Select...</option>
+                {repositories.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">TITLE</label>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">DESCRIPTION</label>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">COMMIT REFERENCE</label>
+              <input value={commitReference} onChange={(e) => setCommitReference(e.target.value)} placeholder="a1b2c3d" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">UPDATED BY</label>
+              <select value={teamMemberId} onChange={(e) => setTeamMemberId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                <option value="">Select...</option>
+                {teamMembers.map((tm) => (
+                  <option key={tm.id} value={tm.id}>
+                    {tm.fullName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {error && <div className="text-xs text-red-600">{error}</div>}
+            <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
+              {submitting ? "Logging..." : "Log update"}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -806,25 +944,177 @@ function AddDocumentModal({ productId, onClose, onSaved }: { productId: string; 
   }
 
   return (
-    <ModalShell title="Add document" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">NAME</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-gray-900">Add document</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={18} />
+          </button>
         </div>
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">TYPE</label>
-          <input value={documentType} onChange={(e) => setDocumentType(e.target.value)} placeholder="Technical, Operational..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">NAME</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">TYPE</label>
+            <input value={documentType} onChange={(e) => setDocumentType(e.target.value)} placeholder="Technical, Operational..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">URL</label>
+            <input value={urlReference} onChange={(e) => setUrlReference(e.target.value)} placeholder="https://..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          {error && <div className="text-xs text-red-600">{error}</div>}
+          <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
+            {submitting ? "Adding..." : "Add document"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ManageRepositoriesModal({ productId, onClose }: { productId: string; onClose: () => void }) {
+  const [repos, setRepos] = useState<RepositoryFull[] | null>(null);
+  const [editingId, setEditingId] = useState<number | "new" | null>(null);
+  const [name, setName] = useState("");
+  const [gitHubUrl, setGitHubUrl] = useState("");
+  const [mainBranch, setMainBranch] = useState("main");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function loadRepos() {
+    const res = await fetch(`${API_URL}/api/products/${productId}/repositories/full`, { headers: authHeaders() });
+    if (res.ok) setRepos(await res.json());
+  }
+
+  useEffect(() => {
+    loadRepos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function startEdit(repo: RepositoryFull) {
+    setEditingId(repo.id);
+    setName(repo.name);
+    setGitHubUrl(repo.gitHubUrl);
+    setMainBranch(repo.mainBranch ?? "main");
+    setDescription(repo.description ?? "");
+  }
+
+  function startNew() {
+    setEditingId("new");
+    setName("");
+    setGitHubUrl("");
+    setMainBranch("main");
+    setDescription("");
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!name.trim() || !gitHubUrl.trim()) {
+      setError("Name and GitHub URL are required.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const url =
+        editingId === "new"
+          ? `${API_URL}/api/products/${productId}/repositories`
+          : `${API_URL}/api/products/${productId}/repositories/${editingId}`;
+
+      const res = await fetch(url, {
+        method: editingId === "new" ? "POST" : "PUT",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ name, gitHubUrl, mainBranch: mainBranch || null, description: description || null }),
+      });
+
+      if (!res.ok) {
+        setError("Failed to save repository.");
+        return;
+      }
+
+      setEditingId(null);
+      loadRepos();
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-gray-900">Manage repositories</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={18} />
+          </button>
         </div>
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">URL</label>
-          <input value={urlReference} onChange={(e) => setUrlReference(e.target.value)} placeholder="https://..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-        </div>
-        {error && <div className="text-xs text-red-600">{error}</div>}
-        <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
-          {submitting ? "Adding..." : "Add document"}
-        </button>
-      </form>
-    </ModalShell>
+
+        {editingId === null && (
+          <>
+            <div className="space-y-2 mb-4">
+              {repos === null && <p className="text-[11px] text-gray-400">Loading…</p>}
+              {repos?.length === 0 && <p className="text-[11px] text-gray-400">No repositories recorded yet.</p>}
+              {repos?.map((r) => (
+                <div key={r.id} className="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2.5">
+                  <div className="min-w-0">
+                    <div className="text-[12px] font-medium text-gray-800">{r.name}</div>
+                    <div className="text-[10px] text-gray-500 truncate">
+                      {r.gitHubUrl} · {r.mainBranch ?? "main"}
+                    </div>
+                  </div>
+                  <button onClick={() => startEdit(r)} className="text-[#3F84E5] hover:text-[#0B1E3A] shrink-0">
+                    <Pencil size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={startNew}
+              className="w-full border border-dashed border-gray-300 text-gray-600 text-sm rounded-lg py-2.5 hover:bg-gray-50"
+            >
+              + Add repository
+            </button>
+          </>
+        )}
+
+        {editingId !== null && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">NAME</label>
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="corepay-api" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">GITHUB URL</label>
+              <input value={gitHubUrl} onChange={(e) => setGitHubUrl(e.target.value)} placeholder="https://github.com/org/repo" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">MAIN BRANCH</label>
+              <input value={mainBranch} onChange={(e) => setMainBranch(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">DESCRIPTION</label>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            {error && <div className="text-xs text-red-600">{error}</div>}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingId(null)}
+                className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg py-2.5 hover:bg-gray-50"
+              >
+                Back
+              </button>
+              <button type="submit" disabled={submitting} className="flex-1 bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
+                {submitting ? "Saving..." : editingId === "new" ? "Add" : "Save"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
   );
 }

@@ -117,6 +117,7 @@ public class ClientRepository : IClientRepository
             SupportPhone = client.SupportPhone,
             RegisteredOffice = client.RegisteredOffice,
             AccountOwner = client.AccountOwner,
+            Notes = client.Notes,
             CreatedAt = client.CreatedAt,
             ConnectedProducts = connectedProducts
         };
@@ -127,10 +128,10 @@ public class ClientRepository : IClientRepository
         const string insertSql = @"
             INSERT INTO Clients
                 (CompanyName, Country, Industry, PrimaryContactName, PrimaryContactEmail,
-                 SupportPhone, RegisteredOffice, AccountOwner, Status, CreatedBy, UpdatedBy, CreatedAt, UpdatedAt)
+                 SupportPhone, RegisteredOffice, AccountOwner, Notes, Status, CreatedBy, UpdatedBy, CreatedAt, UpdatedAt)
             VALUES
                 (@CompanyName, @Country, @Industry, @PrimaryContactName, @PrimaryContactEmail,
-                 @SupportPhone, @RegisteredOffice, @AccountOwner, @Status, @CreatedByUserId, @CreatedByUserId, UTC_TIMESTAMP(), UTC_TIMESTAMP());";
+                 @SupportPhone, @RegisteredOffice, @AccountOwner, @Notes, @Status, @CreatedByUserId, @CreatedByUserId, UTC_TIMESTAMP(), UTC_TIMESTAMP());";
 
         using var connection = _connectionFactory.CreateConnection();
         connection.Open();
@@ -145,6 +146,7 @@ public class ClientRepository : IClientRepository
             request.SupportPhone,
             request.RegisteredOffice,
             request.AccountOwner,
+            request.Notes,
             request.Status,
             CreatedByUserId = createdByUserId
         });
@@ -160,7 +162,7 @@ public class ClientRepository : IClientRepository
             SET CompanyName = @CompanyName, Country = @Country, Industry = @Industry,
                 PrimaryContactName = @PrimaryContactName, PrimaryContactEmail = @PrimaryContactEmail,
                 SupportPhone = @SupportPhone, RegisteredOffice = @RegisteredOffice, AccountOwner = @AccountOwner,
-                Status = @Status, UpdatedBy = @UpdatedByUserId, UpdatedAt = UTC_TIMESTAMP()
+                Notes = @Notes, Status = @Status, UpdatedBy = @UpdatedByUserId, UpdatedAt = UTC_TIMESTAMP()
             WHERE Id = @Id;";
 
         using var connection = _connectionFactory.CreateConnection();
@@ -175,10 +177,18 @@ public class ClientRepository : IClientRepository
             request.SupportPhone,
             request.RegisteredOffice,
             request.AccountOwner,
+            request.Notes,
             request.Status,
             UpdatedByUserId = updatedByUserId
         });
 
+        return rows > 0;
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var rows = await connection.ExecuteAsync("DELETE FROM Clients WHERE Id = @Id;", new { Id = id });
         return rows > 0;
     }
 

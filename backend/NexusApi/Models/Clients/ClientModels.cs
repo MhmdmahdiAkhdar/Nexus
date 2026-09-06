@@ -36,6 +36,7 @@ public class ClientDetailResponse
     public string? SupportPhone { get; set; }
     public string? RegisteredOffice { get; set; }
     public string? AccountOwner { get; set; }
+    public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<ConnectedProductResponse> ConnectedProducts { get; set; } = new();
 }
@@ -56,6 +57,7 @@ public class CreateClientRequest
     public string? SupportPhone { get; set; }
     public string? RegisteredOffice { get; set; }
     public string? AccountOwner { get; set; }
+    public string? Notes { get; set; }
 }
 
 public class UpdateClientRequest : CreateClientRequest

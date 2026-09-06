@@ -6,7 +6,7 @@ namespace NexusApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize] // any logged-in user can view dashboard data
+[Authorize]
 public class DashboardController : ControllerBase
 {
     private readonly IDashboardRepository _dashboardRepository;

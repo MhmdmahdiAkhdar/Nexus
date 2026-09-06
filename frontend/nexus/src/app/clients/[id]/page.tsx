@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Building2, MapPin, Mail, Phone, X } from "lucide-react";
+import { Building2, MapPin, Mail, Phone, X, Trash2 } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
 
@@ -29,6 +29,7 @@ interface ClientDetail {
   supportPhone: string | null;
   registeredOffice: string | null;
   accountOwner: string | null;
+  notes: string | null;
   createdAt: string;
   connectedProducts: ConnectedProduct[];
 }
@@ -52,6 +53,8 @@ export default function ClientDossierPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showAddDeployment, setShowAddDeployment] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   async function loadDetail() {
     const res = await fetch(`${API_URL}/api/clients/${clientId}`, { headers: authHeaders() });
@@ -85,6 +88,17 @@ export default function ClientDossierPage() {
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId]);
+
+  async function handleDeleteClient() {
+    setDeleteError("");
+    const res = await fetch(`${API_URL}/api/clients/${clientId}`, { method: "DELETE", headers: authHeaders() });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      setDeleteError(data?.message ?? "Failed to delete client.");
+      return;
+    }
+    router.push("/clients");
+  }
 
   if (loading) {
     return (
@@ -136,12 +150,20 @@ export default function ClientDossierPage() {
               </p>
             </div>
 
-            <button
-              onClick={() => router.push(`/clients/${clientId}/edit`)}
-              className="border border-gray-300 text-gray-700 text-[13px] font-medium px-4 h-[39px] rounded-md hover:bg-gray-50 transition-colors"
-            >
-              Edit client
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="border border-red-300 text-red-500 text-[13px] font-medium px-3 h-[39px] rounded-md hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors flex items-center gap-1.5"
+              >
+                <Trash2 size={14} /> Delete
+              </button>
+              <button
+                onClick={() => router.push(`/clients/${clientId}/edit`)}
+                className="border border-gray-300 text-gray-700 text-[13px] font-medium px-4 h-[39px] rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Edit client
+              </button>
+            </div>
           </div>
 
           <div className="border-t border-[#D3D3CF] mt-6 mb-6" />
@@ -194,6 +216,13 @@ export default function ClientDossierPage() {
                   <div className="text-[11px] text-[#3A4A5A]">{detail.accountOwner || "—"}</div>
                 </div>
               </div>
+
+              {detail.notes && (
+                <div className="pt-3 mt-3 border-t border-[#E0E1DE]">
+                  <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Notes</div>
+                  <div className="text-[11px] text-[#3A4A5A] whitespace-pre-wrap">{detail.notes}</div>
+                </div>
+              )}
             </section>
 
             <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-6">
@@ -244,6 +273,35 @@ export default function ClientDossierPage() {
             loadDetail();
           }}
         />
+      )}
+
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Delete this client?</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              This can't be undone. If deployments are still linked, the delete will be blocked.
+            </p>
+            {deleteError && <div className="text-xs text-red-600 mb-4">{deleteError}</div>}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium py-2.5 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteClient}
+                className="flex-1 rounded-lg bg-red-500 text-white text-sm font-medium py-2.5 hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

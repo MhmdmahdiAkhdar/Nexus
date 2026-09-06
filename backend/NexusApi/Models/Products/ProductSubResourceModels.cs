@@ -9,6 +9,13 @@ public class CreateModuleRequest
     [Required] public string Status { get; set; } = string.Empty;
 }
 
+public class UpdateModuleRequest
+{
+    [Required] public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    [Required] public string Status { get; set; } = string.Empty;
+}
+
 public class AddResponsibilityRequest
 {
     [Required] public int TeamMemberId { get; set; }
@@ -66,4 +73,25 @@ public class RepositoryOptionResponse
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+}
+
+public class RepositoryFullResponse
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string GitHubUrl { get; set; } = string.Empty;
+    public string? MainBranch { get; set; }
+    public string? Description { get; set; }
+}
+
+public class CreateRepositoryRequest
+{
+    [Required] public string Name { get; set; } = string.Empty;
+    [Required] public string GitHubUrl { get; set; } = string.Empty;
+    public string? MainBranch { get; set; }
+    public string? Description { get; set; }
+}
+
+public class UpdateRepositoryRequest : CreateRepositoryRequest
+{
 }

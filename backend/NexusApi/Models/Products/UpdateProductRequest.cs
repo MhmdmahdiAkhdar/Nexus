@@ -18,4 +18,5 @@ public class UpdateProductRequest
     public string? Criticality { get; set; }
     public string? Technologies { get; set; }
     public string? OwningTeam { get; set; }
+    public string? Notes { get; set; }
 }

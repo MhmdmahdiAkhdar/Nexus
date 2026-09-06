@@ -25,6 +25,7 @@ export default function EditProductPage() {
   const [businessPurpose, setBusinessPurpose] = useState("");
   const [supportedMarkets, setSupportedMarkets] = useState("");
   const [technologies, setTechnologies] = useState("");
+  const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -53,6 +54,7 @@ export default function EditProductPage() {
         setBusinessPurpose(data.businessPurpose ?? "");
         setSupportedMarkets(data.supportedMarkets ?? "");
         setTechnologies(data.technologies ?? "");
+        setNotes(data.notes ?? "");
       } catch (err) {
         console.error(err);
         setError("Could not load product.");
@@ -85,6 +87,7 @@ export default function EditProductPage() {
           criticality,
           technologies: technologies || null,
           owningTeam: owningTeam || null,
+          notes: notes || null,
         }),
       });
 
@@ -223,6 +226,11 @@ export default function EditProductPage() {
                 <label className={labelClass}>TECHNOLOGIES</label>
                 <input value={technologies} onChange={(e) => setTechnologies(e.target.value)} className={inputClass} />
               </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>NOTES</label>
+              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} />
             </div>
 
             {error && <div className="text-xs text-red-600">{error}</div>}

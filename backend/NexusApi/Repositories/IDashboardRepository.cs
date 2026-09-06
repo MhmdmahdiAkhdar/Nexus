@@ -8,5 +8,4 @@ public interface IDashboardRepository
     Task<IEnumerable<RecentProductResponse>> GetRecentProductsAsync(int limit);
     Task<IEnumerable<AttentionItemResponse>> GetAttentionItemsAsync(int limit);
     Task<EnvironmentReadinessResponse> GetEnvironmentReadinessAsync();
-
 }

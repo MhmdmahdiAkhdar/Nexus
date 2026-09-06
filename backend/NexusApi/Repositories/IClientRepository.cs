@@ -9,5 +9,6 @@ public interface IClientRepository
     Task<ClientDetailResponse?> GetDetailAsync(int id);
     Task<Client> CreateAsync(CreateClientRequest request, int createdByUserId);
     Task<bool> UpdateAsync(int id, UpdateClientRequest request, int updatedByUserId);
+    Task<bool> DeleteAsync(int id);
     Task AddDeploymentAsync(int clientId, CreateClientDeploymentRequest request, int userId);
 }

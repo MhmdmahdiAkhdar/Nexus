@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MySqlConnector;
 using NexusApi.Models.Products;
 using NexusApi.Repositories;
 
@@ -60,6 +61,21 @@ public class ProductsController : ControllerBase
         return Ok(new { message = "Product updated." });
     }
 
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        try
+        {
+            var deleted = await _productRepository.DeleteAsync(id);
+            if (!deleted) return NotFound(new { message = "Product not found." });
+            return Ok(new { message = "Product deleted." });
+        }
+        catch (MySqlException ex) when (ex.Number == 1451)
+        {
+            return BadRequest(new { message = "This product has linked modules, deployments, repositories, or documents. Remove those first." });
+        }
+    }
+
     [HttpPost("{id:int}/modules")]
     public async Task<IActionResult> CreateModule(int id, [FromBody] CreateModuleRequest request)
     {
@@ -68,6 +84,29 @@ public class ProductsController : ControllerBase
 
         await _productRepository.CreateModuleAsync(id, request, userId.Value);
         return Ok(new { message = "Module added." });
+    }
+
+    [HttpPut("{id:int}/modules/{moduleId:int}")]
+    public async Task<IActionResult> UpdateModule(int id, int moduleId, [FromBody] UpdateModuleRequest request)
+    {
+        var updated = await _productRepository.UpdateModuleAsync(id, moduleId, request);
+        if (!updated) return NotFound(new { message = "Module not found." });
+        return Ok(new { message = "Module updated." });
+    }
+
+    [HttpDelete("{id:int}/modules/{moduleId:int}")]
+    public async Task<IActionResult> DeleteModule(int id, int moduleId)
+    {
+        try
+        {
+            var deleted = await _productRepository.DeleteModuleAsync(id, moduleId);
+            if (!deleted) return NotFound(new { message = "Module not found." });
+            return Ok(new { message = "Module deleted." });
+        }
+        catch (MySqlException ex) when (ex.Number == 1451)
+        {
+            return BadRequest(new { message = "This module is linked to a deployment. Remove that link first." });
+        }
     }
 
     [HttpPost("{id:int}/responsibilities")]
@@ -126,5 +165,29 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> GetRepositories(int id)
     {
         return Ok(await _productRepository.GetRepositoriesAsync(id));
+    }
+
+    [HttpGet("{id:int}/repositories/full")]
+    public async Task<IActionResult> GetRepositoriesFull(int id)
+    {
+        return Ok(await _productRepository.GetRepositoriesFullAsync(id));
+    }
+
+    [HttpPost("{id:int}/repositories")]
+    public async Task<IActionResult> CreateRepository(int id, [FromBody] CreateRepositoryRequest request)
+    {
+        var userId = CurrentUserId();
+        if (userId is null) return Unauthorized();
+
+        await _productRepository.CreateRepositoryAsync(id, request, userId.Value);
+        return Ok(new { message = "Repository added." });
+    }
+
+    [HttpPut("{id:int}/repositories/{repositoryId:int}")]
+    public async Task<IActionResult> UpdateRepository(int id, int repositoryId, [FromBody] UpdateRepositoryRequest request)
+    {
+        var updated = await _productRepository.UpdateRepositoryAsync(id, repositoryId, request);
+        if (!updated) return NotFound(new { message = "Repository not found." });
+        return Ok(new { message = "Repository updated." });
     }
 }

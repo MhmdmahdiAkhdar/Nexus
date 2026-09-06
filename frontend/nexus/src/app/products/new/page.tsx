@@ -20,6 +20,7 @@ export default function NewProductPage() {
   const [businessPurpose, setBusinessPurpose] = useState("");
   const [supportedMarkets, setSupportedMarkets] = useState("");
   const [technologies, setTechnologies] = useState("");
+  const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,6 +50,7 @@ export default function NewProductPage() {
           criticality,
           technologies: technologies || null,
           owningTeam: owningTeam || null,
+          notes: notes || null,
         }),
       });
 
@@ -215,6 +217,11 @@ export default function NewProductPage() {
                     className={inputClass}
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className={labelClass}>NOTES</label>
+                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} />
               </div>
 
               {error && <div className="text-xs text-red-600">{error}</div>}

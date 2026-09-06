@@ -24,6 +24,7 @@ export default function EditClientPage() {
   const [supportPhone, setSupportPhone] = useState("");
   const [accountOwner, setAccountOwner] = useState("");
   const [registeredOffice, setRegisteredOffice] = useState("");
+  const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -50,6 +51,7 @@ export default function EditClientPage() {
         setSupportPhone(data.supportPhone ?? "");
         setAccountOwner(data.accountOwner ?? "");
         setRegisteredOffice(data.registeredOffice ?? "");
+        setNotes(data.notes ?? "");
       } catch {
         setError("Could not load client.");
       } finally {
@@ -81,6 +83,7 @@ export default function EditClientPage() {
           supportPhone: supportPhone || null,
           registeredOffice: registeredOffice || null,
           accountOwner: accountOwner || null,
+          notes: notes || null,
         }),
       });
 
@@ -193,6 +196,11 @@ export default function EditClientPage() {
             <div>
               <label className={labelClass}>REGISTERED OFFICE</label>
               <input value={registeredOffice} onChange={(e) => setRegisteredOffice(e.target.value)} className={inputClass} />
+            </div>
+
+            <div>
+              <label className={labelClass}>NOTES</label>
+              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} />
             </div>
 
             {error && <div className="text-xs text-red-600">{error}</div>}

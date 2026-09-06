@@ -19,6 +19,7 @@ export default function NewClientPage() {
   const [supportPhone, setSupportPhone] = useState("");
   const [accountOwner, setAccountOwner] = useState("");
   const [registeredOffice, setRegisteredOffice] = useState("");
+  const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -48,6 +49,7 @@ export default function NewClientPage() {
           supportPhone: supportPhone || null,
           registeredOffice: registeredOffice || null,
           accountOwner: accountOwner || null,
+          notes: notes || null,
         }),
       });
 
@@ -158,6 +160,11 @@ export default function NewClientPage() {
                 placeholder="Beirut Central District, Lebanon"
                 className={inputClass}
               />
+            </div>
+
+            <div>
+              <label className={labelClass}>NOTES</label>
+              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} />
             </div>
 
             {error && <div className="text-xs text-red-600">{error}</div>}

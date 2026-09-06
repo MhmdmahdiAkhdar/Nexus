@@ -13,6 +13,7 @@ public class Client
     public string? AccountOwner { get; set; }
     public string? ContactInfo { get; set; }
     public string Status { get; set; } = string.Empty;
+    public string? Notes {get; set;}
     public int? CreatedBy { get; set; }
     public int? UpdatedBy { get; set; }
     public DateTime CreatedAt { get; set; }

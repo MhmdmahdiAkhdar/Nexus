@@ -19,9 +19,14 @@ public class EnvironmentResponse
     public int Id { get; set; }
     public string EnvironmentName { get; set; } = string.Empty;
     public string? EnvironmentType { get; set; }
+    public string? Purpose { get; set; }
     public string? ServerName { get; set; }
+    public string? OperatingSystem { get; set; }
     public string? ApplicationUrl { get; set; }
+    public string? DatabaseInfo { get; set; }
+    public string? MonitoringLink { get; set; }
     public string? AccessReference { get; set; }
+    public string? Notes { get; set; }
 }
 
 public class DeploymentDetailResponse
@@ -69,9 +74,14 @@ public class CreateEnvironmentRequest
 {
     [Required] public string EnvironmentName { get; set; } = string.Empty;
     [Required] public string EnvironmentType { get; set; } = string.Empty;
+    public string? Purpose { get; set; }
     public string? ServerName { get; set; }
+    public string? OperatingSystem { get; set; }
     public string? ApplicationUrl { get; set; }
+    public string? DatabaseInfo { get; set; }
+    public string? MonitoringLink { get; set; }
     public string? AccessReference { get; set; }
+    public string? Notes { get; set; }
 }
 
 public class ClientOptionResponse

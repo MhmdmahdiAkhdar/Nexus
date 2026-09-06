@@ -30,6 +30,7 @@ public class ProductDetailResponse
     public string? SupportedMarkets { get; set; }
     public string? Technologies { get; set; }
     public string? OwningTeam { get; set; }
+    public string? Notes { get; set; }
     public int DeployedClientsCount { get; set; }
     public List<ResponsiblePersonResponse> ResponsiblePeople { get; set; } = new();
     public List<ModuleResponse> Modules { get; set; } = new();

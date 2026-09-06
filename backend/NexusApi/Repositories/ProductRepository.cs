@@ -60,10 +60,10 @@ public class ProductRepository : IProductRepository
         const string insertSql = @"
             INSERT INTO Products
                 (Name, Description, BusinessPurpose, LifecycleStatus, CurrentVersion,
-                 SupportedMarkets, Criticality, Technologies, OwningTeam, CreatedBy, UpdatedBy, CreatedAt, UpdatedAt)
+                 SupportedMarkets, Criticality, Technologies, OwningTeam, Notes, CreatedBy, UpdatedBy, CreatedAt, UpdatedAt)
             VALUES
                 (@Name, @Description, @BusinessPurpose, @LifecycleStatus, @CurrentVersion,
-                 @SupportedMarkets, @Criticality, @Technologies, @OwningTeam, @CreatedByUserId, @CreatedByUserId, UTC_TIMESTAMP(), UTC_TIMESTAMP());";
+                 @SupportedMarkets, @Criticality, @Technologies, @OwningTeam, @Notes, @CreatedByUserId, @CreatedByUserId, UTC_TIMESTAMP(), UTC_TIMESTAMP());";
 
         using var connection = _connectionFactory.CreateConnection();
         connection.Open();
@@ -79,11 +79,11 @@ public class ProductRepository : IProductRepository
             request.Criticality,
             request.Technologies,
             request.OwningTeam,
+            request.Notes,
             CreatedByUserId = createdByUserId
         });
 
         var newId = await connection.QuerySingleAsync<int>("SELECT LAST_INSERT_ID();");
-
         return await connection.QuerySingleAsync<Product>("SELECT * FROM Products WHERE Id = @Id;", new { Id = newId });
     }
 
@@ -129,6 +129,7 @@ public class ProductRepository : IProductRepository
             SupportedMarkets = product.SupportedMarkets,
             Technologies = product.Technologies,
             OwningTeam = product.OwningTeam,
+            Notes = product.Notes,
             DeployedClientsCount = deployedClientsCount,
             ResponsiblePeople = responsiblePeople.ToList(),
             Modules = modules.ToList()
@@ -142,7 +143,7 @@ public class ProductRepository : IProductRepository
             SET Name = @Name, Description = @Description, BusinessPurpose = @BusinessPurpose,
                 LifecycleStatus = @LifecycleStatus, CurrentVersion = @CurrentVersion,
                 SupportedMarkets = @SupportedMarkets, Criticality = @Criticality,
-                Technologies = @Technologies, OwningTeam = @OwningTeam,
+                Technologies = @Technologies, OwningTeam = @OwningTeam, Notes = @Notes,
                 UpdatedBy = @UpdatedByUserId, UpdatedAt = UTC_TIMESTAMP()
             WHERE Id = @Id;";
 
@@ -159,10 +160,18 @@ public class ProductRepository : IProductRepository
             request.Criticality,
             request.Technologies,
             request.OwningTeam,
+            request.Notes,
             UpdatedByUserId = updatedByUserId
         });
 
         return rowsAffected > 0;
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var rows = await connection.ExecuteAsync("DELETE FROM Products WHERE Id = @Id;", new { Id = id });
+        return rows > 0;
     }
 
     public async Task CreateModuleAsync(int productId, CreateModuleRequest request, int userId)
@@ -173,6 +182,27 @@ public class ProductRepository : IProductRepository
 
         using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(sql, new { ProductId = productId, request.Name, request.Description, request.Status, UserId = userId });
+    }
+
+    public async Task<bool> UpdateModuleAsync(int productId, int moduleId, UpdateModuleRequest request)
+    {
+        const string sql = @"
+            UPDATE Modules
+            SET Name = @Name, Description = @Description, Status = @Status, UpdatedAt = UTC_TIMESTAMP()
+            WHERE Id = @ModuleId AND ProductId = @ProductId;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        var rows = await connection.ExecuteAsync(sql, new { ModuleId = moduleId, ProductId = productId, request.Name, request.Description, request.Status });
+        return rows > 0;
+    }
+
+    public async Task<bool> DeleteModuleAsync(int productId, int moduleId)
+    {
+        const string sql = "DELETE FROM Modules WHERE Id = @ModuleId AND ProductId = @ProductId;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        var rows = await connection.ExecuteAsync(sql, new { ModuleId = moduleId, ProductId = productId });
+        return rows > 0;
     }
 
     public async Task AddResponsibilityAsync(int productId, AddResponsibilityRequest request, int userId)
@@ -259,5 +289,35 @@ public class ProductRepository : IProductRepository
 
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QueryAsync<RepositoryOptionResponse>(sql, new { ProductId = productId });
+    }
+
+    public async Task<IEnumerable<RepositoryFullResponse>> GetRepositoriesFullAsync(int productId)
+    {
+        const string sql = "SELECT Id, Name, GitHubUrl, MainBranch, Description FROM Repositories WHERE ProductId = @ProductId ORDER BY Name;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        return await connection.QueryAsync<RepositoryFullResponse>(sql, new { ProductId = productId });
+    }
+
+    public async Task CreateRepositoryAsync(int productId, CreateRepositoryRequest request, int userId)
+    {
+        const string sql = @"
+            INSERT INTO Repositories (ProductId, Name, GitHubUrl, MainBranch, Description, CreatedBy, CreatedAt)
+            VALUES (@ProductId, @Name, @GitHubUrl, @MainBranch, @Description, @UserId, UTC_TIMESTAMP());";
+
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(sql, new { ProductId = productId, request.Name, request.GitHubUrl, request.MainBranch, request.Description, UserId = userId });
+    }
+
+    public async Task<bool> UpdateRepositoryAsync(int productId, int repositoryId, UpdateRepositoryRequest request)
+    {
+        const string sql = @"
+            UPDATE Repositories
+            SET Name = @Name, GitHubUrl = @GitHubUrl, MainBranch = @MainBranch, Description = @Description
+            WHERE Id = @RepositoryId AND ProductId = @ProductId;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        var rows = await connection.ExecuteAsync(sql, new { RepositoryId = repositoryId, ProductId = productId, request.Name, request.GitHubUrl, request.MainBranch, request.Description });
+        return rows > 0;
     }
 }

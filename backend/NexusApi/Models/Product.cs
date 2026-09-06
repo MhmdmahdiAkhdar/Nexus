@@ -12,6 +12,7 @@ public class Product
     public string? Criticality { get; set; }
     public string? Technologies { get; set; }
     public string? OwningTeam { get; set; }
+    public string? Notes { get; set; }
     public int? CreatedBy { get; set; }
     public int? UpdatedBy { get; set; }
     public DateTime CreatedAt { get; set; }

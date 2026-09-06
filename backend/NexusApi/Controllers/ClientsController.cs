@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MySqlConnector;
 using NexusApi.Models.Clients;
 using NexusApi.Repositories;
 
@@ -58,6 +59,21 @@ public class ClientsController : ControllerBase
         if (!updated) return NotFound(new { message = "Client not found." });
 
         return Ok(new { message = "Client updated." });
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        try
+        {
+            var deleted = await _clientRepository.DeleteAsync(id);
+            if (!deleted) return NotFound(new { message = "Client not found." });
+            return Ok(new { message = "Client deleted." });
+        }
+        catch (MySqlException ex) when (ex.Number == 1451)
+        {
+            return BadRequest(new { message = "This client has linked deployments. Remove those first." });
+        }
     }
 
     [HttpPost("{id:int}/deployments")]

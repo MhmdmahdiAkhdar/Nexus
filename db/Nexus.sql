@@ -201,3 +201,15 @@ ALTER TABLE `Clients`
   ADD COLUMN `SupportPhone` VARCHAR(255) NULL AFTER `PrimaryContactEmail`,
   ADD COLUMN `RegisteredOffice` VARCHAR(255) NULL AFTER `SupportPhone`,
   ADD COLUMN `AccountOwner` VARCHAR(255) NULL AFTER `RegisteredOffice`; 
+
+  ALTER TABLE `Products` ADD COLUMN `Notes` TEXT NULL AFTER `Technologies`;
+ALTER TABLE `Clients` ADD COLUMN `Notes` TEXT NULL AFTER `AccountOwner`;
+
+ALTER TABLE `Environments`
+  ADD COLUMN `Purpose` VARCHAR(255) NULL AFTER `EnvironmentType`,
+  ADD COLUMN `OperatingSystem` VARCHAR(255) NULL AFTER `ServerName`,
+  ADD COLUMN `DatabaseInfo` VARCHAR(255) NULL AFTER `ApplicationUrl`,
+  ADD COLUMN `MonitoringLink` VARCHAR(255) NULL AFTER `DatabaseInfo`,
+  ADD COLUMN `Notes` TEXT NULL AFTER `AccessReference`;
+
+ALTER TABLE `Repositories` ADD COLUMN `Description` TEXT NULL AFTER `MainBranch`;

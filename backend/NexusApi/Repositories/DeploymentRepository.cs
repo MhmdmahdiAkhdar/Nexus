@@ -82,14 +82,15 @@ public class DeploymentRepository : IDeploymentRepository
                 GoLiveDate = row.GoLiveDate,
                 CurrentStage = currentStage
             };
-        });
+        }).ToList();
 
+        IEnumerable<DeploymentListItemResponse> filtered = results;
         if (!string.IsNullOrWhiteSpace(stage))
         {
-            results = results.Where(r => string.Equals(r.CurrentStage, stage, StringComparison.OrdinalIgnoreCase));
+            filtered = results.Where(r => string.Equals(r.CurrentStage, stage, StringComparison.OrdinalIgnoreCase));
         }
 
-        return results;
+        return filtered;
     }
 
     public async Task<DeploymentDetailResponse?> GetDetailAsync(int id)
@@ -110,7 +111,9 @@ public class DeploymentRepository : IDeploymentRepository
         if (head is null) return null;
 
         var environments = (await connection.QueryAsync<EnvironmentResponse>(
-            "SELECT Id, EnvironmentName, EnvironmentType, ServerName, ApplicationUrl, AccessReference FROM Environments WHERE DeploymentId = @Id ORDER BY CreatedAt ASC;",
+            @"SELECT Id, EnvironmentName, EnvironmentType, Purpose, ServerName, OperatingSystem,
+                     ApplicationUrl, DatabaseInfo, MonitoringLink, AccessReference, Notes
+              FROM Environments WHERE DeploymentId = @Id ORDER BY CreatedAt ASC;",
             new { Id = id })).ToList();
 
         var currentStage = HighestStage(environments.Select(e => e.EnvironmentType));
@@ -211,8 +214,12 @@ public class DeploymentRepository : IDeploymentRepository
     public async Task AddEnvironmentAsync(int deploymentId, CreateEnvironmentRequest request, int userId)
     {
         const string sql = @"
-            INSERT INTO Environments (DeploymentId, EnvironmentName, EnvironmentType, ServerName, ApplicationUrl, AccessReference, CreatedBy, UpdatedBy, CreatedAt, UpdatedAt)
-            VALUES (@DeploymentId, @EnvironmentName, @EnvironmentType, @ServerName, @ApplicationUrl, @AccessReference, @UserId, @UserId, UTC_TIMESTAMP(), UTC_TIMESTAMP());";
+            INSERT INTO Environments
+                (DeploymentId, EnvironmentName, EnvironmentType, Purpose, ServerName, OperatingSystem,
+                 ApplicationUrl, DatabaseInfo, MonitoringLink, AccessReference, Notes, CreatedBy, UpdatedBy, CreatedAt, UpdatedAt)
+            VALUES
+                (@DeploymentId, @EnvironmentName, @EnvironmentType, @Purpose, @ServerName, @OperatingSystem,
+                 @ApplicationUrl, @DatabaseInfo, @MonitoringLink, @AccessReference, @Notes, @UserId, @UserId, UTC_TIMESTAMP(), UTC_TIMESTAMP());";
 
         using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(sql, new
@@ -220,9 +227,14 @@ public class DeploymentRepository : IDeploymentRepository
             DeploymentId = deploymentId,
             request.EnvironmentName,
             request.EnvironmentType,
+            request.Purpose,
             request.ServerName,
+            request.OperatingSystem,
             request.ApplicationUrl,
+            request.DatabaseInfo,
+            request.MonitoringLink,
             request.AccessReference,
+            request.Notes,
             UserId = userId
         });
     }
