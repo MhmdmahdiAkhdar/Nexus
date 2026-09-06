@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, LogOut } from "lucide-react";
+import { KeyRound, LogOut,ShieldCheck } from "lucide-react";
 import Sidebar from "../layout/Sidebar";
 import Topbar from "../layout/Topbar";
 
@@ -57,6 +57,14 @@ export default function SettingsPage() {
               >
                 <LogOut size={26} />
                 <span className="text-sm font-medium">Log out</span>
+              </button>
+
+              <button
+                onClick={() => router.push("/access-control")}
+                className="w-36 h-36 flex flex-col items-center justify-center gap-3 rounded-2xl bg-white border border-gray-200 shadow-sm text-gray-700 transition-colors hover:bg-[#0B1E3A] hover:border-[#0B1E3A] hover:text-white"
+                >
+                  <ShieldCheck size={26} />
+                <span className="text-sm font-medium">Access control</span>
               </button>
             </div>
           </div>
