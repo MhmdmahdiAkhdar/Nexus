@@ -25,6 +25,7 @@ export default function NewDeploymentPage() {
   const [deploymentStatus, setDeploymentStatus] = useState(LIFECYCLE_OPTIONS[0]);
   const [supportTier, setSupportTier] = useState(TIER_OPTIONS[0]);
   const [goLiveDate, setGoLiveDate] = useState("");
+  const [clientSpecificNotes, setClientSpecificNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -63,6 +64,7 @@ export default function NewDeploymentPage() {
           deploymentStatus,
           goLiveDate: goLiveDate || null,
           supportTier: supportTier || null,
+          clientSpecificNotes: clientSpecificNotes || null,
         }),
       });
 
@@ -162,6 +164,17 @@ export default function NewDeploymentPage() {
                   ))}
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>CLIENT-SPECIFIC NOTES</label>
+              <textarea
+                value={clientSpecificNotes}
+                onChange={(e) => setClientSpecificNotes(e.target.value)}
+                rows={3}
+                placeholder="Anything unique to how this client uses the product..."
+                className={inputClass}
+              />
             </div>
 
             <p className="text-[10px] text-[#8A99A7]">

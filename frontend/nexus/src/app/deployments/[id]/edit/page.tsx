@@ -20,6 +20,7 @@ export default function EditDeploymentPage() {
   const [deploymentStatus, setDeploymentStatus] = useState(LIFECYCLE_OPTIONS[0]);
   const [supportTier, setSupportTier] = useState(TIER_OPTIONS[0]);
   const [goLiveDate, setGoLiveDate] = useState("");
+  const [clientSpecificNotes, setClientSpecificNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -38,8 +39,10 @@ export default function EditDeploymentPage() {
 
         setTitle(`${data.productName} × ${data.clientName}`);
         setProductVersion(data.productVersion ?? "");
+        setDeploymentStatus(data.deploymentStatus ?? LIFECYCLE_OPTIONS[0]);
         setSupportTier(data.supportTier ?? TIER_OPTIONS[0]);
         setGoLiveDate(data.goLiveDate ? data.goLiveDate.split("T")[0] : "");
+        setClientSpecificNotes(data.clientSpecificNotes ?? "");
       } catch {
         setError("Could not load deployment.");
       } finally {
@@ -66,6 +69,7 @@ export default function EditDeploymentPage() {
           deploymentStatus,
           goLiveDate: goLiveDate || null,
           supportTier: supportTier || null,
+          clientSpecificNotes: clientSpecificNotes || null,
         }),
       });
 
@@ -151,6 +155,11 @@ export default function EditDeploymentPage() {
                   ))}
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>CLIENT-SPECIFIC NOTES</label>
+              <textarea value={clientSpecificNotes} onChange={(e) => setClientSpecificNotes(e.target.value)} rows={3} className={inputClass} />
             </div>
 
             {error && <div className="text-xs text-red-600">{error}</div>}

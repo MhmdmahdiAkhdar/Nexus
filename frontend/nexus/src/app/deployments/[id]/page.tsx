@@ -28,6 +28,7 @@ interface DeploymentDetail {
   clientId: number;
   clientName: string;
   clientCountry: string | null;
+  clientSpecificNotes: string | null;
   productId: number;
   productName: string;
   productVersion: string | null;
@@ -207,6 +208,14 @@ export default function DeploymentDossierPage() {
                     </div>
                   </div>
                 </div>
+
+                {detail.clientSpecificNotes && (
+                  <div className="pt-4 mt-4 border-t border-[#E0E1DE]">
+                    <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Client-specific notes</div>
+                    <div className="text-[11px] text-[#3A4A5A] whitespace-pre-wrap">{detail.clientSpecificNotes}</div>
+                  </div>
+                )}
+
               </section>
 
               <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-6">

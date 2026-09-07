@@ -21,7 +21,10 @@ public class ProductRepository : IProductRepository
         const string sql = @"
             SELECT p.Id, p.Name, p.CurrentVersion, p.SupportedMarkets, p.LifecycleStatus, p.Criticality, p.OwningTeam
             FROM Products p
-            WHERE (@Search IS NULL OR p.Name LIKE CONCAT('%', @Search, '%'))
+            WHERE (@Search IS NULL
+                   OR p.Name LIKE CONCAT('%', @Search, '%')
+                   OR p.Technologies LIKE CONCAT('%', @Search, '%')
+                   OR p.LifecycleStatus LIKE CONCAT('%', @Search, '%'))
               AND (@Lifecycle IS NULL OR p.LifecycleStatus = @Lifecycle)
             ORDER BY p.UpdatedAt DESC;";
 

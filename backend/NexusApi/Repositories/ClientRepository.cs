@@ -36,9 +36,15 @@ public class ClientRepository : IClientRepository
                 (SELECT COUNT(*) FROM Deployments d WHERE d.ClientId = c.Id AND d.DeploymentStatus = 'Live') AS LiveCount,
                 (SELECT COUNT(*) FROM Deployments d WHERE d.ClientId = c.Id AND d.DeploymentStatus IN ('Pilot', 'In Progress')) AS OnboardingCount
             FROM Clients c
-            WHERE (@Search IS NULL OR c.CompanyName LIKE CONCAT('%', @Search, '%')
-                                  OR c.Country LIKE CONCAT('%', @Search, '%')
-                                  OR c.PrimaryContactName LIKE CONCAT('%', @Search, '%'))
+            WHERE (@Search IS NULL
+                   OR c.CompanyName LIKE CONCAT('%', @Search, '%')
+                   OR c.Country LIKE CONCAT('%', @Search, '%')
+                   OR c.PrimaryContactName LIKE CONCAT('%', @Search, '%')
+                   OR EXISTS (
+                        SELECT 1 FROM Deployments d2
+                        JOIN Products p2 ON p2.Id = d2.ProductId
+                        WHERE d2.ClientId = c.Id AND p2.Name LIKE CONCAT('%', @Search, '%')
+                   ))
               AND (@Status IS NULL OR c.Status = @Status)
             ORDER BY c.UpdatedAt DESC;";
 

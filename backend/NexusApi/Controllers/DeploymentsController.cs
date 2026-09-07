@@ -25,9 +25,15 @@ public class DeploymentsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetList([FromQuery] string? search, [FromQuery] string? stage)
+    public async Task<IActionResult> GetList(
+        [FromQuery] string? search,
+        [FromQuery] int? productId,
+        [FromQuery] int? clientId,
+        [FromQuery] string? version,
+        [FromQuery] string? environment,
+        [FromQuery] string? status)
     {
-        return Ok(await _deploymentRepository.GetListAsync(search, stage));
+        return Ok(await _deploymentRepository.GetListAsync(search, productId, clientId, version, environment, status));
     }
 
     [HttpGet("{id:int}")]

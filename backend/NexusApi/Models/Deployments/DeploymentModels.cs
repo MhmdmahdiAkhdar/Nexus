@@ -12,6 +12,7 @@ public class DeploymentListItemResponse
     public int ModulesCount { get; set; }
     public DateTime? GoLiveDate { get; set; }
     public string CurrentStage { get; set; } = string.Empty;
+    public string DeploymentStatus { get; set; } = string.Empty;
 }
 
 public class EnvironmentResponse
@@ -40,8 +41,10 @@ public class DeploymentDetailResponse
     public string ProductName { get; set; } = string.Empty;
     public string? ProductVersion { get; set; }
     public string CurrentStage { get; set; } = string.Empty;
+    public string DeploymentStatus { get; set; } = string.Empty;
     public string? SupportTier { get; set; }
     public DateTime? GoLiveDate { get; set; }
+    public string? ClientSpecificNotes { get; set; }
     public int EnabledModulesCount { get; set; }
     public int TotalModulesCount { get; set; }
     public string? AccountOwner { get; set; }
@@ -60,6 +63,7 @@ public class CreateDeploymentRequest
     [Required] public string DeploymentStatus { get; set; } = string.Empty;
     public DateTime? GoLiveDate { get; set; }
     public string? SupportTier { get; set; }
+    public string? ClientSpecificNotes { get; set; }
 }
 
 public class UpdateDeploymentRequest
@@ -68,6 +72,7 @@ public class UpdateDeploymentRequest
     [Required] public string DeploymentStatus { get; set; } = string.Empty;
     public DateTime? GoLiveDate { get; set; }
     public string? SupportTier { get; set; }
+    public string? ClientSpecificNotes { get; set; }
 }
 
 public class CreateEnvironmentRequest

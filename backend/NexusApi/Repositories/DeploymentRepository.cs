@@ -46,25 +46,39 @@ public class DeploymentRepository : IDeploymentRepository
         var s => s.Substring(0, 4)
     };
 
-    public async Task<IEnumerable<DeploymentListItemResponse>> GetListAsync(string? search, string? stage)
+    public async Task<IEnumerable<DeploymentListItemResponse>> GetListAsync(
+        string? search, int? productId, int? clientId, string? version, string? environmentType, string? status)
     {
         const string sql = @"
             SELECT
                 d.Id, c.CompanyName AS ClientName, c.Country AS ClientCountry,
-                p.Name AS ProductName, d.ProductVersion, d.GoLiveDate,
+                p.Name AS ProductName, d.ProductVersion, d.GoLiveDate, d.DeploymentStatus,
                 (SELECT COUNT(*) FROM DeploymentModules dm WHERE dm.DeploymentId = d.Id) AS ModulesCount,
                 (SELECT GROUP_CONCAT(e.EnvironmentType SEPARATOR ',') FROM Environments e WHERE e.DeploymentId = d.Id) AS EnvironmentTypes
             FROM Deployments d
             JOIN Clients c ON c.Id = d.ClientId
             JOIN Products p ON p.Id = d.ProductId
-            WHERE (@Search IS NULL OR c.CompanyName LIKE CONCAT('%', @Search, '%')
-                                  OR p.Name LIKE CONCAT('%', @Search, '%'))
+            WHERE (@Search IS NULL OR c.CompanyName LIKE CONCAT('%', @Search, '%') OR p.Name LIKE CONCAT('%', @Search, '%'))
+              AND (@ProductId IS NULL OR d.ProductId = @ProductId)
+              AND (@ClientId IS NULL OR d.ClientId = @ClientId)
+              AND (@Version IS NULL OR d.ProductVersion LIKE CONCAT('%', @Version, '%'))
+              AND (@Status IS NULL OR d.DeploymentStatus = @Status)
+              AND (@EnvironmentType IS NULL OR EXISTS (
+                    SELECT 1 FROM Environments e2 WHERE e2.DeploymentId = d.Id AND e2.EnvironmentType = @EnvironmentType))
             ORDER BY d.GoLiveDate DESC;";
 
         using var connection = _connectionFactory.CreateConnection();
-        var rows = await connection.QueryAsync(sql, new { Search = string.IsNullOrWhiteSpace(search) ? null : search });
+        var rows = await connection.QueryAsync(sql, new
+        {
+            Search = string.IsNullOrWhiteSpace(search) ? null : search,
+            ProductId = productId,
+            ClientId = clientId,
+            Version = string.IsNullOrWhiteSpace(version) ? null : version,
+            Status = string.IsNullOrWhiteSpace(status) ? null : status,
+            EnvironmentType = string.IsNullOrWhiteSpace(environmentType) ? null : environmentType
+        });
 
-        var results = rows.Select(row =>
+        return rows.Select(row =>
         {
             int id = (int)row.Id;
             string envTypesRaw = row.EnvironmentTypes ?? "";
@@ -80,17 +94,10 @@ public class DeploymentRepository : IDeploymentRepository
                 ProductVersion = row.ProductVersion,
                 ModulesCount = (int)row.ModulesCount,
                 GoLiveDate = row.GoLiveDate,
-                CurrentStage = currentStage
+                CurrentStage = currentStage,
+                DeploymentStatus = row.DeploymentStatus
             };
-        }).ToList();
-
-        IEnumerable<DeploymentListItemResponse> filtered = results;
-        if (!string.IsNullOrWhiteSpace(stage))
-        {
-            filtered = results.Where(r => string.Equals(r.CurrentStage, stage, StringComparison.OrdinalIgnoreCase));
-        }
-
-        return filtered;
+        });
     }
 
     public async Task<DeploymentDetailResponse?> GetDetailAsync(int id)
@@ -99,7 +106,7 @@ public class DeploymentRepository : IDeploymentRepository
 
         const string headSql = @"
             SELECT
-                d.Id, d.ProductVersion, d.SupportTier, d.GoLiveDate,
+                d.Id, d.ProductVersion, d.SupportTier, d.GoLiveDate, d.DeploymentStatus, d.ClientSpecificNotes,
                 c.Id AS ClientId, c.CompanyName AS ClientName, c.Country AS ClientCountry, c.AccountOwner,
                 p.Id AS ProductId, p.Name AS ProductName
             FROM Deployments d
@@ -152,8 +159,10 @@ public class DeploymentRepository : IDeploymentRepository
             ProductName = head.ProductName,
             ProductVersion = head.ProductVersion,
             CurrentStage = currentStage,
+            DeploymentStatus = head.DeploymentStatus,
             SupportTier = head.SupportTier,
             GoLiveDate = head.GoLiveDate,
+            ClientSpecificNotes = head.ClientSpecificNotes,
             EnabledModulesCount = enabledModulesCount,
             TotalModulesCount = totalModulesCount,
             AccountOwner = head.AccountOwner,
@@ -168,8 +177,10 @@ public class DeploymentRepository : IDeploymentRepository
     public async Task<int> CreateAsync(CreateDeploymentRequest request, int userId)
     {
         const string sql = @"
-            INSERT INTO Deployments (ClientId, ProductId, ProductVersion, GoLiveDate, DeploymentStatus, SupportTier, CreatedBy, UpdatedBy, CreatedAt, UpdatedAt)
-            VALUES (@ClientId, @ProductId, @ProductVersion, @GoLiveDate, @DeploymentStatus, @SupportTier, @UserId, @UserId, UTC_TIMESTAMP(), UTC_TIMESTAMP());";
+            INSERT INTO Deployments
+                (ClientId, ProductId, ProductVersion, GoLiveDate, DeploymentStatus, SupportTier, ClientSpecificNotes, CreatedBy, UpdatedBy, CreatedAt, UpdatedAt)
+            VALUES
+                (@ClientId, @ProductId, @ProductVersion, @GoLiveDate, @DeploymentStatus, @SupportTier, @ClientSpecificNotes, @UserId, @UserId, UTC_TIMESTAMP(), UTC_TIMESTAMP());";
 
         using var connection = _connectionFactory.CreateConnection();
         connection.Open();
@@ -182,6 +193,7 @@ public class DeploymentRepository : IDeploymentRepository
             request.GoLiveDate,
             request.DeploymentStatus,
             request.SupportTier,
+            request.ClientSpecificNotes,
             UserId = userId
         });
 
@@ -193,7 +205,7 @@ public class DeploymentRepository : IDeploymentRepository
         const string sql = @"
             UPDATE Deployments
             SET ProductVersion = @ProductVersion, DeploymentStatus = @DeploymentStatus,
-                GoLiveDate = @GoLiveDate, SupportTier = @SupportTier,
+                GoLiveDate = @GoLiveDate, SupportTier = @SupportTier, ClientSpecificNotes = @ClientSpecificNotes,
                 UpdatedBy = @UserId, UpdatedAt = UTC_TIMESTAMP()
             WHERE Id = @Id;";
 
@@ -205,6 +217,7 @@ public class DeploymentRepository : IDeploymentRepository
             request.DeploymentStatus,
             request.GoLiveDate,
             request.SupportTier,
+            request.ClientSpecificNotes,
             UserId = userId
         });
 
