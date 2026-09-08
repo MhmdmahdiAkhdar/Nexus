@@ -111,7 +111,7 @@ export default function EditClientPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar />
-          <main className="flex-1 px-[30px] pt-[30px]">
+          <main className="flex-1 px-7.5 pt-7.5">
             <p className="text-[11px] text-[#7A8FA4]">Loading client…</p>
           </main>
         </div>
@@ -126,7 +126,7 @@ export default function EditClientPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
+        <main className="flex-1 px-7.5 pt-7.5 pb-10">
           <button onClick={() => router.push(`/clients/${clientId}`)} className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A] mb-3">
             ← {companyName.toUpperCase()}
           </button>

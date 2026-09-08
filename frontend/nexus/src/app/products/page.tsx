@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Filter, Plus, Boxes } from "lucide-react";
+import { Search, Filter, Plus, Package, ChevronRight } from "lucide-react";
 import Sidebar from "../layout/Sidebar";
 import Topbar from "../layout/Topbar";
 
@@ -23,21 +23,32 @@ interface ProductListItem {
 }
 
 function LifecycleBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    Active: "border-[#6EAA99] text-[#267B67]",
-    Beta: "border-[#82A7C4] text-[#36719C]",
-    Deprecated: "border-[#C2762E] text-[#A15F25]",
+  const styles: Record<string, { bg: string; text: string; border: string }> = {
+    Active: { bg: "bg-green-100", text: "text-green-800", border: "border-green-300" },
+    Beta: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-300" },
+    Deprecated: { bg: "bg-red-100", text: "text-red-800", border: "border-red-300" },
   };
 
+  const style = styles[status] || { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-300" };
+
   return (
-    <span
-      className={`text-[9px] font-mono tracking-wide px-1.5 py-[3px] border ${
-        styles[status] ?? "border-gray-300 text-gray-500"
-      }`}
-    >
-      {status.toUpperCase()}
+    <span className={`text-xs font-semibold px-2.5 py-1.5 rounded-full border inline-block ${style.bg} ${style.text} ${style.border}`}>
+      {status}
     </span>
   );
+}
+
+function CriticalityBadge({ level }: { level: string | null }) {
+  if (!level) return <span className="text-sm text-gray-500">—</span>;
+
+  const colors: Record<string, string> = {
+    Critical: "text-red-700 font-semibold",
+    High: "text-orange-700 font-semibold",
+    Medium: "text-yellow-700 font-semibold",
+    Low: "text-green-700 font-semibold",
+  };
+
+  return <span className={`text-sm ${colors[level] || "text-gray-700"}`}>{level}</span>;
 }
 
 export default function ProductsPage() {
@@ -110,121 +121,162 @@ export default function ProductsPage() {
   }, [search, lifecycleFilter]);
 
   return (
-    <div className="flex min-h-screen bg-[#F4F0E8]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
-          <div className="flex items-end justify-between">
-            <div>
-              <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">
-                System register
+        <main className="flex-1 px-12 py-8 overflow-auto">
+          
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Register</h1>
+                <p className="text-gray-600 text-sm">Manage and track all software products in the IDS Fintech ecosystem</p>
               </div>
-              <h1 className="text-[36px] leading-none tracking-[-1.5px] font-semibold text-[#0B1E3A]">
-                Product register
-              </h1>
-              <p className="text-[11px] text-[#7A8FA4] mt-5">
-                A traceable catalogue of every software product delivered by IDS Fintech.
-              </p>
-            </div>
-
-            <Link
-              href="/products/new"
-              className="flex items-center gap-2 bg-[#0B1E3A] hover:bg-[#152C50] text-white text-[13px] font-medium px-4 h-[39px] transition-colors"
-            >
-              <Plus size={16} strokeWidth={1.8} />
-              Create product
-            </Link>
-          </div>
-
-          <div className="border-t border-[#D3D3CF] mt-6 mb-6" />
-
-          <div className="flex items-center gap-3 mb-6">
-            <div className="relative flex-1">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search name, record ID, or team"
-                className="w-full border border-gray-300 bg-white rounded-lg pl-9 pr-3 py-2 text-[12px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3F84E5]/30 focus:border-[#3F84E5]"
-              />
-            </div>
-
-            <div className="relative">
-              <Filter size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              <select
-                value={lifecycleFilter}
-                onChange={(e) => setLifecycleFilter(e.target.value)}
-                className="appearance-none border border-gray-300 bg-white rounded-lg pl-8 pr-8 py-2 text-[12px] text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#3F84E5]/30 focus:border-[#3F84E5]"
+              <Link
+                href="/products/new"
+                className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors duration-200 shadow-sm"
               >
-                <option value="">All lifecycle</option>
-                {LIFECYCLE_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
+                <Plus size={18} strokeWidth={2.5} />
+                Create Product
+              </Link>
             </div>
           </div>
 
-          {error && <div className="text-[11px] text-red-600 mb-4">{error}</div>}
-
-          <div className="bg-[#FAFAF8] border border-[#D2D5D3]">
-            <div className="grid grid-cols-[1fr_100px_120px_120px_1fr_20px] px-[18px] py-2.5 border-b border-[#D8D9D7] text-[9px] uppercase tracking-[0.1em] font-mono text-[#698097]">
-              <span>Product / Record</span>
-              <span>Version</span>
-              <span>Lifecycle</span>
-              <span>Criticality</span>
-              <span>Accountable team</span>
-              <span></span>
+          {/* Search & Filter Section */}
+          <div className="mb-6 flex gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
+              <div className="relative">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name, record ID, or team"
+                  className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                />
+              </div>
             </div>
 
-            {loading && <div className="px-[18px] py-8 text-[11px] text-[#8A99A7]">Loading products…</div>}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Lifecycle</label>
+              <div className="relative">
+                <select
+                  value={lifecycleFilter}
+                  onChange={(e) => setLifecycleFilter(e.target.value)}
+                  className="appearance-none border border-gray-300 rounded-lg pl-4 pr-10 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
+                >
+                  <option value="">All Status</option>
+                  {LIFECYCLE_OPTIONS.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+                <Filter size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+          </div>
 
-            {!loading && products.length === 0 && (
-              <div className="px-[18px] py-8 text-[11px] text-[#8A99A7]">
-                No products found{search || lifecycleFilter ? " for this search/filter." : "."}
+          {/* Error State */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <span className="text-red-600 font-bold">!</span>
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
+
+          {/* Products Table */}
+          <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+            
+            {/* Table Header */}
+            <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-300">
+              <div className="col-span-4 text-xs font-semibold text-gray-700 uppercase tracking-wider">Product</div>
+              <div className="col-span-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">Version</div>
+              <div className="col-span-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</div>
+              <div className="col-span-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">Criticality</div>
+              <div className="col-span-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">Team</div>
+            </div>
+
+            {/* Loading State */}
+            {loading && (
+              <div className="px-6 py-12 text-center">
+                <Package size={32} className="text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-600 text-sm">Loading products…</p>
               </div>
             )}
 
-            {!loading &&
-              products.map((product) => (
-                <Link
-                  key={product.id}
-                  href={`/products/${product.id}`}
-                  className="grid grid-cols-[1fr_100px_120px_120px_1fr_20px] items-center min-h-[70px] px-[18px] border-b border-[#E0E1DE] last:border-b-0 hover:bg-white transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-md border border-[#D2D5D3] bg-white flex items-center justify-center shrink-0">
-                      <Boxes size={15} className="text-[#3F84E5]" />
-                    </div>
-                    <div>
-                      <div className="text-[12px] font-medium text-[#0B1E3A]">{product.name}</div>
-                      <div className="text-[9px] font-mono text-[#8A99A7] mt-0.5">
-                        {product.recordCode} · {product.marketsCount} market{product.marketsCount === 1 ? "" : "s"}
+            {/* Empty State */}
+            {!loading && products.length === 0 && (
+              <div className="px-6 py-12 text-center">
+                <Package size={32} className="text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-600 text-sm">
+                  {search || lifecycleFilter ? "No products match your search" : "No products yet"}
+                </p>
+              </div>
+            )}
+
+            {/* Table Rows */}
+            <div className="divide-y divide-gray-200">
+              {!loading &&
+                products.map((product) => (
+                  <Link
+                    key={product.id}
+                    href={`/products/${product.id}`}
+                    className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer items-center group"
+                  >
+                    {/* Product Info */}
+                    <div className="col-span-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Package size={16} className="text-blue-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-gray-900 truncate">{product.name}</div>
+                          <div className="text-xs text-gray-600 mt-0.5 truncate">
+                            {product.recordCode} • {product.marketsCount} market{product.marketsCount === 1 ? "" : "s"}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="text-[11px] text-[#4A5A6A]">
-                    {product.currentVersion ? `v${product.currentVersion}` : "—"}
-                  </div>
+                    {/* Version */}
+                    <div className="col-span-2">
+                      <span className="text-sm text-gray-700 font-medium">
+                        {product.currentVersion ? `v${product.currentVersion}` : "—"}
+                      </span>
+                    </div>
 
-                  <div>
-                    <LifecycleBadge status={product.lifecycleStatus} />
-                  </div>
+                    {/* Status */}
+                    <div className="col-span-2">
+                      <LifecycleBadge status={product.lifecycleStatus} />
+                    </div>
 
-                  <div className="text-[11px] text-[#3F84E5]">{product.criticality ?? "—"}</div>
+                    {/* Criticality */}
+                    <div className="col-span-2">
+                      <CriticalityBadge level={product.criticality} />
+                    </div>
 
-                  <div className="text-[11px] text-[#A15F25]">{product.accountableTeam}</div>
-
-                  <div className="text-[#8A99A7] text-[12px]">›</div>
-                </Link>
-              ))}
+                    {/* Team */}
+                    <div className="col-span-2 flex items-center justify-between">
+                      <span className="text-sm text-gray-700">{product.accountableTeam}</span>
+                      <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
+                    </div>
+                  </Link>
+                ))}
+            </div>
           </div>
+
+          {/* Footer Info */}
+          {!loading && products.length > 0 && (
+            <div className="mt-6 text-xs text-gray-600">
+              Showing <span className="font-semibold text-gray-900">{products.length}</span> product{products.length === 1 ? "" : "s"}
+            </div>
+          )}
         </main>
       </div>
     </div>

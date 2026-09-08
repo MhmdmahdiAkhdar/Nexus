@@ -9,41 +9,51 @@ import {
   Layers3,
   UsersRound,
   FileText,
-  ShieldCheck,
   Settings,
+  Lock,
+  ChevronRight,
 } from "lucide-react";
 
 const navItems = [
   {
-    label: "Command center",
+    label: "Command Center",
     href: "/dashboard",
     icon: Gauge,
+    badge: null,
   },
   {
-    label: "Product register",
+    label: "Product Register",
     href: "/products",
     icon: Network,
+    badge: null,
   },
   {
-    label: "Client register",
+    label: "Client Register",
     href: "/clients",
     icon: Building2,
+    badge: null,
   },
   {
-    label: "Deployment register",
+    label: "Deployment Register",
     href: "/deployments",
     icon: Layers3,
+    badge: "3",
   },
   {
-    label: "People & ownership",
+    label: "People & Ownership",
     href: "/team",
     icon: UsersRound,
+    badge: null,
   },
   {
-    label: "Reference index",
+    label: "Reference Index",
     href: "/documents",
     icon: FileText,
+    badge: null,
   },
+];
+
+const settingsItems = [
   {
     label: "Settings",
     href: "/settings",
@@ -55,53 +65,43 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[261px] min-h-screen shrink-0 bg-[#0B2545] text-white flex flex-col">
-      <div className="px-5 pt-5">
-        <div className="flex items-start gap-3">
-          <div className="relative flex h-[35px] w-[35px] items-center justify-center border border-[#5B83A5] bg-[#173B60]">
+    <aside className="w-64 min-h-screen bg-[#0F1419] border-r border-[#1F2937] flex flex-col">
+      
+      {/* Header Logo */}
+      <div className="px-6 py-8 border-b border-[#1F2937]">
+        <div className="flex items-end gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] rounded-lg flex items-center justify-center shadow-lg border border-[#3B82F6]/30">
             <svg
-              width="20"
-              height="20"
+              width="22"
+              height="22"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#D3E2ED"
-              strokeWidth="1.6"
+              stroke="white"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
               <circle cx="12" cy="5" r="2" />
               <circle cx="6" cy="19" r="2" />
               <circle cx="18" cy="19" r="2" />
-              <path d="M12 7v5" />
-              <path d="M12 12H6v5" />
-              <path d="M12 12h6v5" />
+              <path d="M12 7v6M12 13l-6 4M12 13l6 4" />
             </svg>
-
-            <span className="absolute -right-[4px] -top-[5px] h-[8px] w-[8px] bg-[#C2762E]" />
           </div>
-
-          <div className="pt-[1px]">
-            <div className="text-[17px] font-semibold leading-none tracking-[-0.3px]">
-              nexus
-            </div>
-
-            <div className="mt-[5px] text-[8px] font-mono tracking-[0.2em] text-[#87A8C2]">
-              LEDGER / IDS
-            </div>
+          <div>
+            <h2 className="text-xl font-bold text-white tracking-tight">NEXUS</h2>
+            <p className="text-xs text-gray-400 font-semibold tracking-widest mt-0.5">IDS LEDGER</p>
           </div>
         </div>
       </div>
 
-      <div className="px-5 pt-[30px]">
-        <div className="text-[9px] font-mono uppercase tracking-[0.17em] text-[#6F9ABE]">
-          Command rail / Sections
+      {/* Main Navigation */}
+      <nav className="flex-1 px-3 py-6 space-y-1">
+        <div className="px-3 mb-4">
+          <p className="text-xs font-semibold text-gray-500 tracking-widest uppercase">Navigation</p>
         </div>
-      </div>
 
-      <nav className="mt-3 px-5">
         {navItems.map((item) => {
           const Icon = item.icon;
-
           const active =
             pathname === item.href ||
             (pathname === "/" && item.href === "/dashboard");
@@ -110,63 +110,99 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`relative flex h-[40px] items-center gap-[13px] pl-[11px] text-[11px] transition-colors ${
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${
                 active
-                  ? "bg-[#123F69] text-white"
-                  : "text-[#A5B9CA] hover:bg-[#123653] hover:text-white"
+                  ? "bg-[#2563EB] text-white shadow-lg shadow-blue-500/20"
+                  : "text-gray-300 hover:bg-[#1F2937] hover:text-[#60A5FA]"
               }`}
             >
-              {active && (
-                <span className="absolute left-0 top-0 h-full w-[2px] bg-[#C2762E]" />
-              )}
-
               <Icon
-                size={17}
-                strokeWidth={1.5}
-                className={active ? "text-[#D0DFE9]" : "text-[#9CB2C5]"}
+                size={18}
+                strokeWidth={1.8}
+                className={`transition-colors ${
+                  active ? "text-white" : "text-gray-400 group-hover:text-[#60A5FA]"
+                }`}
               />
 
-              <span className="font-medium">{item.label}</span>
+              <span className="flex-1">{item.label}</span>
+
+              {item.badge && (
+                <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                  active
+                    ? "bg-white/20 text-white"
+                    : "bg-red-900/40 text-red-300"
+                }`}>
+                  {item.badge}
+                </span>
+              )}
+
+              {active && (
+                <ChevronRight size={16} className="text-white" />
+              )}
             </Link>
           );
         })}
       </nav>
 
-      <div className="mx-5 mt-[25px] border-t border-[#234967]" />
+      {/* Divider */}
+      <div className="px-3 mb-2">
+        <div className="h-px bg-[#1F2937]" />
+      </div>
 
-      <div className="px-5 pt-[27px]">
-        <div className="text-[9px] font-mono uppercase tracking-[0.17em] text-[#6F9ABE]">
-          Access boundary
+      {/* Settings Section */}
+      <nav className="px-3 py-4 border-t border-[#1F2937]">
+        <div className="px-3 mb-3">
+          <p className="text-xs font-semibold text-gray-500 tracking-widest uppercase">Admin</p>
+        </div>
+
+        {settingsItems.map((item) => {
+          const Icon = item.icon;
+          const active = pathname === item.href;
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${
+                active
+                  ? "bg-[#2563EB] text-white shadow-lg shadow-blue-500/20"
+                  : "text-gray-300 hover:bg-[#1F2937] hover:text-[#60A5FA]"
+              }`}
+            >
+              <Icon
+                size={18}
+                strokeWidth={1.8}
+                className={`transition-colors ${
+                  active ? "text-white" : "text-gray-400 group-hover:text-[#60A5FA]"
+                }`}
+              />
+              <span className="flex-1">{item.label}</span>
+              {active && <ChevronRight size={16} className="text-white" />}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Security Info Box */}
+      <div className="mx-3 mb-6 p-4 bg-[#1F2937] border border-[#374151] rounded-lg backdrop-blur-sm">
+        <div className="flex items-start gap-2.5">
+          <Lock size={16} className="text-[#60A5FA] mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-xs font-semibold text-white">Private Workspace</p>
+            <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+              Records visible to IDS Fintech employees only. All access is logged.
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="mx-5 mt-[14px] border border-[#285476] bg-[#102F51] px-3 py-3">
-        <div className="flex items-center gap-2">
-          <ShieldCheck
-            size={16}
-            strokeWidth={1.5}
-            className="text-[#9FC88C]"
-          />
-
-          <span className="text-[11px] font-semibold text-white">
-            Private workspace
-          </span>
-        </div>
-
-        <p className="ml-[24px] mt-[3px] text-[8px] leading-[1.6] text-[#89A8BF]">
-          Records are visible to IDS Fintech
-          <br />
-          employees only.
-        </p>
-      </div>
-
-      <div className="mt-auto px-5 pb-7">
-        <div className="text-[8px] font-mono text-[#6F94B2]">
-          BUILD 2.6.14
-        </div>
-
-        <div className="mt-[4px] text-[9px] text-[#7F9EB6]">
-          Internal operating system
+      {/* Footer */}
+      <div className="px-6 py-4 border-t border-[#1F2937]">
+        <p className="text-xs text-gray-400 font-mono">BUILD 2.6.14</p>
+        <p className="text-xs text-gray-500 mt-1 font-light">IDS Enterprise System</p>
+        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#1F2937]">
+          <div className="w-2 h-2 rounded-full bg-emerald-500" />
+          <p className="text-xs text-gray-400">All systems operational</p>
         </div>
       </div>
     </aside>

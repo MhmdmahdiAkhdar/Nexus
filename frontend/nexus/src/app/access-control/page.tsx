@@ -123,7 +123,7 @@ export default function AccessControlPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
+        <main className="flex-1 px-7.5 pt-7.5 pb-10">
           <div className="flex items-start justify-between">
             <div>
               <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">

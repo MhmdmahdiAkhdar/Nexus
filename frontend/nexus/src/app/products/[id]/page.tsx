@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Users, Layers, X, Trash2, Pencil, GitBranch } from "lucide-react";
+import { Users, Package, X, Trash2, Pencil, GitBranch, ChevronLeft, AlertCircle, FileText } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
 
@@ -84,6 +84,39 @@ type Tab = (typeof TABS)[number];
 function authHeaders() {
   const token = localStorage.getItem("nexus_token");
   return { Authorization: `Bearer ${token}` };
+}
+
+function CriticalityBadge({ level }: { level: string | null }) {
+  if (!level) return null;
+  
+  const colors: Record<string, { bg: string; text: string }> = {
+    Critical: { bg: "bg-red-100", text: "text-red-700" },
+    High: { bg: "bg-orange-100", text: "text-orange-700" },
+    Medium: { bg: "bg-yellow-100", text: "text-yellow-700" },
+    Low: { bg: "bg-green-100", text: "text-green-700" },
+  };
+
+  const style = colors[level] || { bg: "bg-gray-100", text: "text-gray-700" };
+  return (
+    <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full ${style.bg} ${style.text}`}>
+      {level}
+    </span>
+  );
+}
+
+function LifecycleBadge({ status }: { status: string }) {
+  const colors: Record<string, { bg: string; text: string }> = {
+    Active: { bg: "bg-green-100", text: "text-green-700" },
+    Beta: { bg: "bg-blue-100", text: "text-blue-700" },
+    Deprecated: { bg: "bg-red-100", text: "text-red-700" },
+  };
+
+  const style = colors[status] || { bg: "bg-gray-100", text: "text-gray-700" };
+  return (
+    <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full ${style.bg} ${style.text}`}>
+      {status}
+    </span>
+  );
 }
 
 export default function ProductDossierPage() {
@@ -185,12 +218,12 @@ export default function ProductDossierPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-[#F4F0E8]">
+      <div className="flex min-h-screen bg-white">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar />
-          <main className="flex-1 px-[30px] pt-[30px]">
-            <p className="text-[11px] text-[#7A8FA4]">Loading product…</p>
+          <main className="flex-1 px-12 py-8">
+            <p className="text-sm text-gray-500">Loading product…</p>
           </main>
         </div>
       </div>
@@ -199,325 +232,394 @@ export default function ProductDossierPage() {
 
   if (error || !detail) {
     return (
-      <div className="flex min-h-screen bg-[#F4F0E8]">
+      <div className="flex min-h-screen bg-white">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar />
-          <main className="flex-1 px-[30px] pt-[30px]">
-            <p className="text-[11px] text-red-600">{error || "Product not found."}</p>
+          <main className="flex-1 px-12 py-8">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{error || "Product not found."}</p>
+            </div>
           </main>
         </div>
       </div>
     );
   }
 
-  const lifecycleStyles: Record<string, string> = {
-    Active: "border-[#6EAA99] text-[#267B67]",
-    Beta: "border-[#82A7C4] text-[#36719C]",
-    Deprecated: "border-[#C2762E] text-[#A15F25]",
-  };
-
   return (
-    <div className="flex min-h-screen bg-[#F4F0E8]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
+        <main className="flex-1 px-12 py-8 overflow-auto">
+          
+          {/* Back Button */}
           <button
             onClick={() => router.push("/products")}
-            className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A] mb-3"
+            className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold mb-6 transition-colors"
           >
-            ← PRODUCT REGISTER
+            <ChevronLeft size={16} />
+            Back to Products
           </button>
 
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">
-                System register
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">{detail.name}</h1>
+                <p className="text-gray-600 text-sm">
+                  {detail.recordCode} • {detail.owningTeam ?? "Unassigned Team"}
+                </p>
               </div>
-              <h1 className="text-[32px] leading-none tracking-[-1.2px] font-semibold text-[#0B1E3A]">
-                {detail.name}
-              </h1>
-              <p className="text-[11px] text-[#7A8FA4] mt-2">
-                {detail.recordCode} · {detail.owningTeam ?? "Unassigned"}
-              </p>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 border border-red-300 text-red-700 hover:bg-red-50 rounded-lg font-semibold text-sm transition-colors"
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+                <button
+                  onClick={() => router.push(`/products/${productId}/edit`)}
+                  className="px-4 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-semibold text-sm transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setShowLogUpdate(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors"
+                >
+                  Log Update
+                </button>
+              </div>
             </div>
 
+            {/* Status Badges */}
             <div className="flex gap-2">
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="border border-red-300 text-red-500 text-[13px] font-medium px-3 h-[39px] rounded-md hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors flex items-center gap-1.5"
-              >
-                <Trash2 size={14} /> Delete
-              </button>
-              <button
-                onClick={() => router.push(`/products/${productId}/edit`)}
-                className="border border-gray-300 text-gray-700 text-[13px] font-medium px-4 h-[39px] rounded-md hover:bg-gray-50 transition-colors"
-              >
-                Edit product
-              </button>
-              <button
-                onClick={() => setShowLogUpdate(true)}
-                className="flex items-center gap-2 bg-[#0B1E3A] hover:bg-[#152C50] text-white text-[13px] font-medium px-4 h-[39px] rounded-md transition-colors"
-              >
-                + Log update
-              </button>
+              <LifecycleBadge status={detail.lifecycleStatus} />
+              <CriticalityBadge level={detail.criticality} />
             </div>
           </div>
 
-          <div className="flex gap-6 border-b border-[#D3D3CF] mt-6">
-            {TABS.map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`text-[12px] pb-3 -mb-px border-b-2 transition-colors ${
-                  tab === t
-                    ? "border-[#0B1E3A] text-[#0B1E3A] font-semibold"
-                    : "border-transparent text-[#8A99A7] hover:text-[#0B1E3A]"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
+          {/* Tabs */}
+          <div className="border-b border-gray-200 mb-8">
+            <div className="flex gap-8">
+              {TABS.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${
+                    tab === t
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
 
+          {/* Tab Content */}
           {tab === "Overview" && (
-            <div className="grid grid-cols-[1fr_320px] gap-5 mt-6">
-              <div className="space-y-5">
-                <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-6">
-                  <div className="flex gap-2 mb-4">
-                    <span className={`text-[9px] font-mono px-2 py-1 border ${lifecycleStyles[detail.lifecycleStatus] ?? "border-gray-300 text-gray-500"}`}>
-                      {detail.lifecycleStatus.toUpperCase()}
-                    </span>
-                    {detail.criticality && (
-                      <span className="text-[9px] font-mono px-2 py-1 border border-[#C2762E] text-[#A15F25]">
-                        {detail.criticality.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-
+            <div className="grid grid-cols-3 gap-8">
+              <div className="col-span-2 space-y-6">
+                
+                {/* Description */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Product Information</h2>
+                  
                   {detail.description && (
-                    <p className="text-[13px] text-[#3A4A5A] leading-relaxed mb-4">{detail.description}</p>
-                  )}
-
-                  {detail.currentVersion && (
-                    <div className="mb-4">
-                      <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono">Current version</div>
-                      <div className="text-[16px] font-semibold text-[#3F84E5]">v{detail.currentVersion}</div>
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-gray-700 mb-2">Description</h3>
+                      <p className="text-gray-700 text-sm leading-relaxed">{detail.description}</p>
                     </div>
                   )}
 
-                  <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#E0E1DE]">
-                    <div>
-                      <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Business purpose</div>
-                      <div className="text-[11px] text-[#3A4A5A]">{detail.businessPurpose || "—"}</div>
+                  {detail.businessPurpose && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-gray-700 mb-2">Business Purpose</h3>
+                      <p className="text-gray-700 text-sm leading-relaxed">{detail.businessPurpose}</p>
                     </div>
-                    <div>
-                      <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Supported markets</div>
-                      <div className="text-[11px] text-[#3A4A5A]">{detail.supportedMarkets || "—"}</div>
-                    </div>
-                    <div>
-                      <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Technology</div>
-                      <div className="text-[11px] text-[#3A4A5A]">{detail.technologies || "—"}</div>
-                    </div>
-                  </div>
+                  )}
 
                   {detail.notes && (
-                    <div className="pt-4 mt-4 border-t border-[#E0E1DE]">
-                      <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Notes</div>
-                      <div className="text-[11px] text-[#3A4A5A] whitespace-pre-wrap">{detail.notes}</div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700 mb-2">Notes</h3>
+                      <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{detail.notes}</p>
                     </div>
                   )}
-                </section>
+                </div>
 
-                <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-6">
+                {/* Technical Details */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                    <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Current Version</h3>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {detail.currentVersion ? `v${detail.currentVersion}` : "—"}
+                    </p>
+                  </div>
+                  
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                    <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Deployed Clients</h3>
+                    <p className="text-2xl font-bold text-gray-900">{detail.deployedClientsCount}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                    <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Supported Markets</h3>
+                    <p className="text-sm text-gray-800">{detail.supportedMarkets || "—"}</p>
+                  </div>
+                  
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                    <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Technologies</h3>
+                    <p className="text-sm text-gray-800">{detail.technologies || "—"}</p>
+                  </div>
+                </div>
+
+                {/* Modules */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono">Product architecture</div>
-                      <h3 className="text-[14px] font-semibold text-[#0B1E3A] mt-1">Modules</h3>
-                    </div>
+                    <h2 className="text-lg font-bold text-gray-900">Modules</h2>
                     <button
                       onClick={() => setShowAddModule(true)}
-                      className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A]"
+                      className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
                     >
-                      + Add module
+                      + Add Module
                     </button>
                   </div>
 
                   {detail.modules.length === 0 && (
-                    <p className="text-[11px] text-[#8A99A7]">No modules recorded yet.</p>
+                    <p className="text-gray-600 text-sm">No modules recorded yet.</p>
                   )}
 
                   <div className="space-y-2">
                     {detail.modules.map((m) => (
-                      <div key={m.id} className="flex items-center gap-3 border border-[#E0E1DE] bg-white rounded-md px-3 py-2.5">
-                        <Layers size={14} className="text-[#3F84E5] shrink-0" />
-                        <div className="flex-1">
-                          <div className="text-[12px] font-medium text-[#0B1E3A]">{m.name}</div>
-                          {m.description && <div className="text-[10px] text-[#8A99A7]">{m.description}</div>}
+                      <div key={m.id} className="flex items-start gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
+                        <Package size={16} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-gray-900">{m.name}</div>
+                          {m.description && <p className="text-xs text-gray-600 mt-1">{m.description}</p>}
                         </div>
-                        <span className="text-[9px] font-mono text-[#698097]">{m.status}</span>
-                        <button onClick={() => setEditingModule(m)} className="text-gray-400 hover:text-[#3F84E5]">
-                          <Pencil size={13} />
-                        </button>
-                        <button onClick={() => handleDeleteModule(m.id)} className="text-gray-400 hover:text-red-500">
-                          <Trash2 size={13} />
-                        </button>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="inline-block text-xs font-semibold px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full">
+                            {m.status}
+                          </span>
+                          <button
+                            onClick={() => setEditingModule(m)}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteModule(m.id)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
-                </section>
+                </div>
 
-                <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-6">
+                {/* Repositories */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono">Source control</div>
-                      <h3 className="text-[14px] font-semibold text-[#0B1E3A] mt-1">Repositories</h3>
-                    </div>
+                    <h2 className="text-lg font-bold text-gray-900">Repositories</h2>
                     <button
                       onClick={() => setShowManageRepos(true)}
-                      className="flex items-center gap-1.5 text-[11px] text-[#2874B6] hover:text-[#0B1E3A]"
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold"
                     >
-                      <GitBranch size={13} /> Manage repositories
+                      <GitBranch size={14} />
+                      Manage
                     </button>
                   </div>
-                  <p className="text-[11px] text-[#8A99A7]">
-                    Repository name, GitHub URL, and main branch are stored here for reference — no automatic sync.
+                  <p className="text-sm text-gray-600">
+                    Repository references and GitHub URLs are stored here for tracking purposes only.
                   </p>
-                </section>
+                </div>
               </div>
 
-              <div className="space-y-5">
-                <section className="bg-white border border-[#D2D5D3] p-5">
-                  <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono">Accountability chain</div>
-                  <h3 className="text-[14px] font-semibold text-[#0B1E3A] mt-1 mb-3">Responsible people</h3>
+              {/* Sidebar */}
+              <div className="space-y-6">
+                
+                {/* Responsible People */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-gray-900">Responsibility</h2>
+                    <button
+                      onClick={() => setShowManageResp(true)}
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold"
+                    >
+                      <Users size={14} />
+                      Manage
+                    </button>
+                  </div>
 
                   {detail.responsiblePeople.length === 0 && (
-                    <p className="text-[11px] text-[#8A99A7] mb-3">No one assigned yet.</p>
+                    <p className="text-sm text-gray-600">No one assigned yet.</p>
                   )}
 
-                  <div className="space-y-3 mb-3">
+                  <div className="space-y-3">
                     {detail.responsiblePeople.map((p) => (
-                      <div key={p.responsibilityId} className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-[#0B1E3A] text-white flex items-center justify-center text-[10px] font-semibold shrink-0">
-                          {p.fullName.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+                      <div key={p.responsibilityId} className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                          {p.fullName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .slice(0, 2)
+                            .join("")
+                            .toUpperCase()}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[12px] font-medium text-[#0B1E3A] truncate">{p.fullName}</div>
-                          <div className="text-[10px] text-[#8A99A7]">{p.jobTitle || ""}</div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-gray-900">{p.fullName}</div>
+                          {p.jobTitle && <div className="text-xs text-gray-600">{p.jobTitle}</div>}
+                          <div className="text-xs font-semibold text-blue-600 mt-1 uppercase tracking-wider">
+                            {p.responsibility}
+                          </div>
                         </div>
-                        <span className="text-[9px] font-mono text-[#698097] uppercase shrink-0">{p.responsibility}</span>
                       </div>
                     ))}
                   </div>
-
-                  <button
-                    onClick={() => setShowManageResp(true)}
-                    className="flex items-center gap-1.5 text-[11px] text-[#2874B6] hover:text-[#0B1E3A]"
-                  >
-                    <Users size={13} /> Manage responsibility
-                  </button>
-                </section>
-
-                <section className="bg-white border border-[#D2D5D3] p-5">
-                  <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono">
-                    Client footprint / {String(detail.deployedClientsCount).padStart(2, "0")}
-                  </div>
-                  <h3 className="text-[14px] font-semibold text-[#0B1E3A] mt-1">Deployed clients</h3>
-                  <p className="text-[11px] text-[#8A99A7] mt-2">
-                    See the Deployments tab for the full list of clients this product is live with.
-                  </p>
-                </section>
+                </div>
               </div>
             </div>
           )}
 
           {tab === "Deployments" && (
-            <div className="bg-[#FAFAF8] border border-[#D2D5D3] mt-6">
-              <div className="grid grid-cols-[1fr_100px_120px_120px_100px] px-[18px] py-2.5 border-b border-[#D8D9D7] text-[9px] uppercase tracking-[0.1em] font-mono text-[#698097]">
-                <span>Client</span>
-                <span>Version</span>
-                <span>Status</span>
-                <span>Go-live</span>
-                <span>Tier</span>
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Client</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Version</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Go-Live</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Support Tier</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {deployments === null && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-600">
+                          Loading…
+                        </td>
+                      </tr>
+                    )}
+                    {deployments?.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-600">
+                          No deployments for this product yet.
+                        </td>
+                      </tr>
+                    )}
+                    {deployments?.map((d) => (
+                      <tr key={d.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 text-sm font-semibold text-gray-900">{d.clientName}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{d.productVersion ? `v${d.productVersion}` : "—"}</td>
+                        <td className="px-6 py-4">
+                          <span className="inline-block text-xs font-semibold px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full">
+                            {d.deploymentStatus}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {d.goLiveDate ? new Date(d.goLiveDate).toLocaleDateString() : "—"}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{d.supportTier ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              {deployments === null && <div className="px-[18px] py-6 text-[11px] text-[#8A99A7]">Loading…</div>}
-              {deployments?.length === 0 && (
-                <div className="px-[18px] py-6 text-[11px] text-[#8A99A7]">No deployments for this product yet.</div>
-              )}
-              {deployments?.map((d) => (
-                <div key={d.id} className="grid grid-cols-[1fr_100px_120px_120px_100px] items-center min-h-[56px] px-[18px] border-b border-[#E0E1DE] last:border-b-0 text-[11px]">
-                  <span className="text-[#0B1E3A] font-medium">{d.clientName}</span>
-                  <span className="text-[#4A5A6A]">{d.productVersion ? `v${d.productVersion}` : "—"}</span>
-                  <span className="text-[#3F84E5]">{d.deploymentStatus}</span>
-                  <span className="text-[#8A99A7]">{d.goLiveDate ? new Date(d.goLiveDate).toLocaleDateString() : "—"}</span>
-                  <span className="text-[#A15F25]">{d.supportTier ?? "—"}</span>
-                </div>
-              ))}
             </div>
           )}
 
           {tab === "Documents" && (
-            <div className="mt-6">
-              <div className="flex justify-end mb-3">
+            <div>
+              <div className="flex justify-end mb-4">
                 <button
                   onClick={() => setShowAddDocument(true)}
-                  className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A]"
+                  className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
                 >
-                  + Add document
+                  + Add Document
                 </button>
               </div>
-              <div className="bg-[#FAFAF8] border border-[#D2D5D3]">
-                {documents === null && <div className="px-[18px] py-6 text-[11px] text-[#8A99A7]">Loading…</div>}
-                {documents?.length === 0 && (
-                  <div className="px-[18px] py-6 text-[11px] text-[#8A99A7]">No documents recorded yet.</div>
+
+              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                {documents === null && (
+                  <div className="px-6 py-8 text-center text-sm text-gray-600">Loading…</div>
                 )}
-                {documents?.map((d) => (
-                  <div key={d.id} className="flex items-center justify-between px-[18px] py-3 border-b border-[#E0E1DE] last:border-b-0">
-                    <div>
-                      <div className="text-[12px] font-medium text-[#0B1E3A]">{d.name}</div>
-                      <div className="text-[10px] text-[#8A99A7]">
-                        {d.documentType ?? "Document"}
-                        {d.lastUpdatedDate ? ` · updated ${new Date(d.lastUpdatedDate).toLocaleDateString()}` : ""}
+                {documents?.length === 0 && (
+                  <div className="px-6 py-8 text-center text-sm text-gray-600">No documents recorded yet.</div>
+                )}
+                <div className="divide-y divide-gray-200">
+                  {documents?.map((d) => (
+                    <div key={d.id} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <FileText size={16} className="text-gray-400" />
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">{d.name}</div>
+                          <div className="text-xs text-gray-600 mt-0.5">
+                            {d.documentType ?? "Document"}
+                            {d.lastUpdatedDate && ` • Updated ${new Date(d.lastUpdatedDate).toLocaleDateString()}`}
+                          </div>
+                        </div>
                       </div>
+                      {d.urlReference && (
+                        <a
+                          href={d.urlReference}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
+                        >
+                          Open →
+                        </a>
+                      )}
                     </div>
-                    {d.urlReference && (
-                      <a href={d.urlReference} target="_blank" rel="noreferrer" className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A]">
-                        Open ↗
-                      </a>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
           {tab === "Activity" && (
-            <div className="bg-[#FAFAF8] border border-[#D2D5D3] mt-6">
-              {activity === null && <div className="px-[18px] py-6 text-[11px] text-[#8A99A7]">Loading…</div>}
-              {activity?.length === 0 && (
-                <div className="px-[18px] py-6 text-[11px] text-[#8A99A7]">No activity logged yet.</div>
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              {activity === null && (
+                <div className="px-6 py-8 text-center text-sm text-gray-600">Loading…</div>
               )}
-              {activity?.map((a) => (
-                <div key={a.id} className="px-[18px] py-3.5 border-b border-[#E0E1DE] last:border-b-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-medium text-[#0B1E3A]">{a.title}</span>
-                    <span className="text-[10px] text-[#8A99A7]">{new Date(a.updateDate).toLocaleDateString()}</span>
+              {activity?.length === 0 && (
+                <div className="px-6 py-8 text-center text-sm text-gray-600">No activity logged yet.</div>
+              )}
+              <div className="divide-y divide-gray-200">
+                {activity?.map((a) => (
+                  <div key={a.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="text-sm font-semibold text-gray-900">{a.title}</h3>
+                      <span className="text-xs text-gray-600">
+                        {new Date(a.updateDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-2">
+                      {a.repositoryName} • {a.updatedByName}
+                      {a.commitReference && ` • ${a.commitReference}`}
+                    </p>
+                    {a.description && <p className="text-sm text-gray-700">{a.description}</p>}
                   </div>
-                  <div className="text-[10px] text-[#8A99A7] mt-0.5">
-                    {a.repositoryName} · {a.updatedByName}
-                    {a.commitReference ? ` · ${a.commitReference}` : ""}
-                  </div>
-                  {a.description && <p className="text-[11px] text-[#3A4A5A] mt-1.5">{a.description}</p>}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </main>
       </div>
 
+      {/* Modals */}
       {showAddModule && (
         <ModuleFormModal
           productId={productId}
@@ -581,23 +683,29 @@ export default function ProductDossierPage() {
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
           onClick={() => setShowDeleteConfirm(false)}
         >
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Delete this product?</h2>
-            <p className="text-sm text-gray-500 mb-4">
-              This can't be undone. If modules, deployments, repositories, or documents are still linked, the
-              delete will be blocked.
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Delete Product?</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              This action cannot be undone. If modules, deployments, repositories, or documents are linked, deletion will be blocked.
             </p>
-            {deleteError && <div className="text-xs text-red-600 mb-4">{deleteError}</div>}
+            {deleteError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800">
+                {deleteError}
+              </div>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium py-2.5 hover:bg-gray-50"
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-semibold text-sm transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteProduct}
-                className="flex-1 rounded-lg bg-red-500 text-white text-sm font-medium py-2.5 hover:bg-red-600"
+                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition-colors"
               >
                 Delete
               </button>
@@ -654,33 +762,67 @@ function ModuleFormModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-900">{existing ? "Edit module" : "Add module"}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
+          <h2 className="text-lg font-bold text-gray-900">
+            {existing ? "Edit Module" : "Add Module"}
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <X size={20} />
           </button>
         </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">NAME</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">DESCRIPTION</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">STATUS</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Status
+            </label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            >
               <option>Active</option>
               <option>In Development</option>
               <option>Deprecated</option>
             </select>
           </div>
+
           {error && <div className="text-xs text-red-600">{error}</div>}
-          <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
-            {submitting ? "Saving..." : existing ? "Save changes" : "Add module"}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg transition-colors"
+          >
+            {submitting ? "Saving..." : existing ? "Save Changes" : "Add Module"}
           </button>
         </form>
       </div>
@@ -715,7 +857,7 @@ function ManageResponsibilityModal({
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     if (!teamMemberId || !responsibility.trim()) {
-      setError("Pick a person and enter a responsibility.");
+      setError("Select a person and enter a responsibility.");
       return;
     }
     setSubmitting(true);
@@ -726,7 +868,7 @@ function ManageResponsibilityModal({
         body: JSON.stringify({ teamMemberId: Number(teamMemberId), responsibility }),
       });
       if (!res.ok) {
-        setError("Failed to add.");
+        setError("Failed to add responsibility.");
         return;
       }
       setTeamMemberId("");
@@ -747,53 +889,75 @@ function ManageResponsibilityModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 max-h-[80vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-900">Manage responsibility</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
+          <h2 className="text-lg font-bold text-gray-900">Manage Responsibility</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <X size={20} />
           </button>
         </div>
 
-        <div className="space-y-2 mb-5">
-          {people.length === 0 && <p className="text-[11px] text-gray-400">No one assigned yet.</p>}
+        <div className="space-y-2 mb-6 pb-6 border-b border-gray-200">
+          {people.length === 0 && <p className="text-sm text-gray-600">No one assigned yet.</p>}
           {people.map((p) => (
-            <div key={p.responsibilityId} className="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2">
-              <div>
-                <div className="text-[12px] font-medium text-gray-800">{p.fullName}</div>
-                <div className="text-[10px] text-gray-500">{p.responsibility}</div>
+            <div key={p.responsibilityId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-gray-900">{p.fullName}</div>
+                <div className="text-xs text-gray-600">{p.responsibility}</div>
               </div>
-              <button onClick={() => handleRemove(p.responsibilityId)} className="text-[11px] text-red-500 hover:text-red-700">
+              <button
+                onClick={() => handleRemove(p.responsibilityId)}
+                className="text-xs text-red-600 hover:text-red-800 font-semibold ml-2 flex-shrink-0"
+              >
                 Remove
               </button>
             </div>
           ))}
         </div>
 
-        <form onSubmit={handleAdd} className="space-y-3 border-t border-gray-200 pt-4">
+        <form onSubmit={handleAdd} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">TEAM MEMBER</label>
-            <select value={teamMemberId} onChange={(e) => setTeamMemberId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">Select...</option>
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Team Member
+            </label>
+            <select
+              value={teamMemberId}
+              onChange={(e) => setTeamMemberId(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            >
+              <option value="">Select a person…</option>
               {teamMembers.map((tm) => (
                 <option key={tm.id} value={tm.id}>
-                  {tm.fullName} {tm.jobTitle ? `— ${tm.jobTitle}` : ""}
+                  {tm.fullName}
                 </option>
               ))}
             </select>
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">RESPONSIBILITY</label>
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Responsibility
+            </label>
             <input
+              type="text"
               value={responsibility}
               onChange={(e) => setResponsibility(e.target.value)}
-              placeholder="e.g. Product Owner"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              placeholder="e.g., Product Owner"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
+
           {error && <div className="text-xs text-red-600">{error}</div>}
-          <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
-            {submitting ? "Adding..." : "Add responsibility"}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg transition-colors"
+          >
+            {submitting ? "Adding..." : "Add Responsibility"}
           </button>
         </form>
       </div>
@@ -854,24 +1018,33 @@ function LogUpdateModal({ productId, onClose, onSaved }: { productId: string; on
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 max-h-[80vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-900">Log update</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
+          <h2 className="text-lg font-bold text-gray-900">Log Update</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <X size={20} />
           </button>
         </div>
+
         {repositories.length === 0 ? (
-          <p className="text-[12px] text-gray-500">
-            This product has no repositories linked yet, so there's nowhere to attach an update log entry. Add
-            one via "Manage repositories" first.
+          <p className="text-sm text-gray-600">
+            This product has no repositories linked. Add one via "Manage repositories" first.
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">REPOSITORY</label>
-              <select value={repositoryId} onChange={(e) => setRepositoryId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                <option value="">Select...</option>
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                Repository
+              </label>
+              <select
+                value={repositoryId}
+                onChange={(e) => setRepositoryId(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              >
+                <option value="">Select repository…</option>
                 {repositories.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
@@ -879,22 +1052,54 @@ function LogUpdateModal({ productId, onClose, onSaved }: { productId: string; on
                 ))}
               </select>
             </div>
+
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">TITLE</label>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                Title
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
             </div>
+
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">DESCRIPTION</label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                Description
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
             </div>
+
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">COMMIT REFERENCE</label>
-              <input value={commitReference} onChange={(e) => setCommitReference(e.target.value)} placeholder="a1b2c3d" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                Commit Reference
+              </label>
+              <input
+                type="text"
+                value={commitReference}
+                onChange={(e) => setCommitReference(e.target.value)}
+                placeholder="e.g., a1b2c3d"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
             </div>
+
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">UPDATED BY</label>
-              <select value={teamMemberId} onChange={(e) => setTeamMemberId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                <option value="">Select...</option>
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                Updated By
+              </label>
+              <select
+                value={teamMemberId}
+                onChange={(e) => setTeamMemberId(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              >
+                <option value="">Select person…</option>
                 {teamMembers.map((tm) => (
                   <option key={tm.id} value={tm.id}>
                     {tm.fullName}
@@ -902,9 +1107,15 @@ function LogUpdateModal({ productId, onClose, onSaved }: { productId: string; on
                 ))}
               </select>
             </div>
+
             {error && <div className="text-xs text-red-600">{error}</div>}
-            <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
-              {submitting ? "Logging..." : "Log update"}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg transition-colors"
+            >
+              {submitting ? "Logging..." : "Log Update"}
             </button>
           </form>
         )}
@@ -945,29 +1156,64 @@ function AddDocumentModal({ productId, onClose, onSaved }: { productId: string; 
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-900">Add document</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
+          <h2 className="text-lg font-bold text-gray-900">Add Document</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <X size={20} />
           </button>
         </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">NAME</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">TYPE</label>
-            <input value={documentType} onChange={(e) => setDocumentType(e.target.value)} placeholder="Technical, Operational..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Type
+            </label>
+            <input
+              type="text"
+              value={documentType}
+              onChange={(e) => setDocumentType(e.target.value)}
+              placeholder="e.g., Technical, Operational"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">URL</label>
-            <input value={urlReference} onChange={(e) => setUrlReference(e.target.value)} placeholder="https://..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              URL
+            </label>
+            <input
+              type="url"
+              value={urlReference}
+              onChange={(e) => setUrlReference(e.target.value)}
+              placeholder="https://example.com"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
           </div>
+
           {error && <div className="text-xs text-red-600">{error}</div>}
-          <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
-            {submitting ? "Adding..." : "Add document"}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg transition-colors"
+          >
+            {submitting ? "Adding..." : "Add Document"}
           </button>
         </form>
       </div>
@@ -1009,6 +1255,7 @@ function ManageRepositoriesModal({ productId, onClose }: { productId: string; on
     setGitHubUrl("");
     setMainBranch("main");
     setDescription("");
+    setError("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -1045,28 +1292,34 @@ function ManageRepositoriesModal({ productId, onClose }: { productId: string; on
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 max-h-[80vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-900">Manage repositories</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
+          <h2 className="text-lg font-bold text-gray-900">Manage Repositories</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <X size={20} />
           </button>
         </div>
 
         {editingId === null && (
           <>
             <div className="space-y-2 mb-4">
-              {repos === null && <p className="text-[11px] text-gray-400">Loading…</p>}
-              {repos?.length === 0 && <p className="text-[11px] text-gray-400">No repositories recorded yet.</p>}
+              {repos === null && <p className="text-sm text-gray-600">Loading…</p>}
+              {repos?.length === 0 && <p className="text-sm text-gray-600">No repositories yet.</p>}
               {repos?.map((r) => (
-                <div key={r.id} className="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2.5">
+                <div key={r.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="min-w-0">
-                    <div className="text-[12px] font-medium text-gray-800">{r.name}</div>
-                    <div className="text-[10px] text-gray-500 truncate">
-                      {r.gitHubUrl} · {r.mainBranch ?? "main"}
+                    <div className="text-sm font-semibold text-gray-900">{r.name}</div>
+                    <div className="text-xs text-gray-600 truncate">
+                      {r.gitHubUrl} • {r.mainBranch ?? "main"}
                     </div>
                   </div>
-                  <button onClick={() => startEdit(r)} className="text-[#3F84E5] hover:text-[#0B1E3A] shrink-0">
+                  <button
+                    onClick={() => startEdit(r)}
+                    className="text-blue-600 hover:text-blue-800 flex-shrink-0"
+                  >
                     <Pencil size={14} />
                   </button>
                 </div>
@@ -1074,9 +1327,9 @@ function ManageRepositoriesModal({ productId, onClose }: { productId: string; on
             </div>
             <button
               onClick={startNew}
-              className="w-full border border-dashed border-gray-300 text-gray-600 text-sm rounded-lg py-2.5 hover:bg-gray-50"
+              className="w-full border-2 border-dashed border-gray-300 text-gray-600 hover:text-gray-900 font-semibold py-2.5 rounded-lg transition-colors text-sm"
             >
-              + Add repository
+              + Add Repository
             </button>
           </>
         )}
@@ -1084,31 +1337,70 @@ function ManageRepositoriesModal({ productId, onClose }: { productId: string; on
         {editingId !== null && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">NAME</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="corepay-api" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., corepay-api"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
             </div>
+
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">GITHUB URL</label>
-              <input value={gitHubUrl} onChange={(e) => setGitHubUrl(e.target.value)} placeholder="https://github.com/org/repo" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                GitHub URL
+              </label>
+              <input
+                type="url"
+                value={gitHubUrl}
+                onChange={(e) => setGitHubUrl(e.target.value)}
+                placeholder="https://github.com/org/repo"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
             </div>
+
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">MAIN BRANCH</label>
-              <input value={mainBranch} onChange={(e) => setMainBranch(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                Main Branch
+              </label>
+              <input
+                type="text"
+                value={mainBranch}
+                onChange={(e) => setMainBranch(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
             </div>
+
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">DESCRIPTION</label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                Description
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={2}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
             </div>
+
             {error && <div className="text-xs text-red-600">{error}</div>}
-            <div className="flex gap-2">
+
+            <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => setEditingId(null)}
-                className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg py-2.5 hover:bg-gray-50"
+                className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold py-2.5 rounded-lg transition-colors text-sm"
               >
                 Back
               </button>
-              <button type="submit" disabled={submitting} className="flex-1 bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm"
+              >
                 {submitting ? "Saving..." : editingId === "new" ? "Add" : "Save"}
               </button>
             </div>

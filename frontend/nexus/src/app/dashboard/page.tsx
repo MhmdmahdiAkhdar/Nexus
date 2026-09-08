@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "../../app/layout/Sidebar";
 import Topbar from "../../app/layout/Topbar";
 
-import { Plus, AlertCircle, ShieldCheck } from "lucide-react";
+import { Plus, AlertCircle, ShieldCheck, TrendingUp, Users, Package, Zap } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -42,19 +42,19 @@ interface EnvironmentReadiness {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    Active: "border-[#6EAA99] text-[#267B67]",
-    Beta: "border-[#82A7C4] text-[#36719C]",
-    Deprecated: "border-[#C2762E] text-[#A15F25]",
+  const styleMap: Record<string, { bg: string; text: string; border: string }> = {
+    Active: { bg: "bg-green-100", text: "text-green-800", border: "border-green-300" },
+    Beta: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-300" },
+    Deprecated: { bg: "bg-red-100", text: "text-red-800", border: "border-red-300" },
+    Live: { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-300" },
+    Staging: { bg: "bg-yellow-100", text: "text-yellow-800", border: "border-yellow-300" },
   };
 
+  const style = styleMap[status] || { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-300" };
+
   return (
-    <span
-      className={`text-[9px] font-mono tracking-wide px-1.5 py-[3px] border ${
-        styles[status] ?? "border-gray-300 text-gray-500"
-      }`}
-    >
-      {status.toUpperCase()}
+    <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full border ${style.bg} ${style.text} ${style.border}`}>
+      {status}
     </span>
   );
 }
@@ -62,13 +62,13 @@ function StatusBadge({ status }: { status: string }) {
 function timeAgo(dateString: string): string {
   const diffMs = Date.now() - new Date(dateString).getTime();
   const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days === 1) return "Yesterday";
-  return `${days} days ago`;
+  return `${days}d ago`;
 }
 
 export default function DashboardPage() {
@@ -138,181 +138,205 @@ export default function DashboardPage() {
     loadDashboard();
   }, [router]);
 
-  const statCards = stats
-    ? [
-        { label: "Total products", value: stats.totalProducts, href: "/products" },
-        { label: "Active products", value: stats.activeProducts, href: "/products" },
-        { label: "Client companies", value: stats.clientCompanies, href: "/clients" },
-        { label: "Total deployments", value: stats.totalDeployments, href: "/deployments" },
-        { label: "Live deployments", value: stats.liveDeployments, href: "/deployments" },
-        { label: "Team members", value: stats.totalTeamMembers, href: "/team" },
-      ]
-    : [];
-
   return (
-    <div className="flex min-h-screen bg-[#f9fafb]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main
-          className="flex-1 px-[30px] pt-[30px] pb-10"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-            backgroundColor: "#f9fafb",
-          }}
-        >
-          <div className="flex items-end justify-between">
-            <div>
-              <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">
-                System register
+        <main className="flex-1 px-12 py-8 overflow-auto">
+          
+          {/* Header Section */}
+          <div className="mb-10">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+                <p className="text-gray-600 text-sm">Monitor your products, deployments, and team operations</p>
               </div>
-
-              <h1 className="text-[36px] leading-none tracking-[-1.5px] font-semibold text-[#0B1E3A]">
-                Command center
-              </h1>
-
-              <p className="text-[11px] text-[#7A8FA4] mt-5">
-                A working index of what is live, changing, and waiting for an accountable owner.
-              </p>
             </div>
-
-            <button className="flex items-center gap-2 bg-[#0B1E3A] hover:bg-[#152C50] text-white text-[13px] font-medium px-4 h-[39px] transition-colors">
-              <Plus size={16} strokeWidth={1.8} />
-              Quick record
-            </button>
           </div>
 
-          <div className="border-t border-[#D3D3CF] mt-6 mb-6" />
-
-          {error && <div className="text-[11px] text-red-600 mb-4">{error}</div>}
-
-          {loading ? (
-            <div className="text-[11px] text-[#7A8FA4] mb-7">Loading dashboard…</div>
-          ) : (
-            <div className="grid grid-cols-3 gap-y-6 mb-7">
-              {statCards.map((stat) => (
-                <a
-                  key={stat.label}
-                  href={stat.href}
-                  className="border-l-2 border-[#C2762E] pl-3 min-h-[63px] block hover:opacity-70 transition-opacity"
-                >
-                  <div className="text-[9px] uppercase tracking-[0.14em] font-mono text-[#698097] mb-2">
-                    {stat.label}
-                  </div>
-                  <div className="text-[22px] leading-none font-semibold text-[#0B1E3A]">
-                    {stat.value}
-                  </div>
-                </a>
-              ))}
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-5">
-            <section className="col-span-2 bg-[#FAFAF8] border border-[#D2D5D3]">
-              <div className="flex items-center justify-between px-[18px] py-[15px] border-b border-[#D8D9D7]">
-                <div>
-                  <div className="text-[9px] uppercase tracking-[0.15em] font-mono text-[#698097]">
-                    Register activity
-                  </div>
-                  <h2 className="text-[16px] font-semibold text-[#0B1E3A] mt-1">
-                    Recently updated products
-                  </h2>
-                </div>
-                <a href="/products" className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A]">
-                  View register ↗
-                </a>
-              </div>
-
-              <div>
-                {recentProducts.length === 0 && !loading && (
-                  <div className="px-[18px] py-6 text-[11px] text-[#8A99A7]">No products yet.</div>
-                )}
-                {recentProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="grid grid-cols-[1fr_80px] items-center min-h-[78px] px-[18px] border-b border-[#E0E1DE] last:border-b-0"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-medium text-[#0B1E3A]">{product.name}</span>
-                        <StatusBadge status={product.lifecycleStatus} />
-                      </div>
-                      <div className="text-[8px] text-[#8A99A7] mt-1">
-                        {product.currentVersion ? `release v${product.currentVersion}` : "no release yet"}
-                      </div>
+          {/* Stats Section */}
+          {loading ? (
+            <div className="text-gray-600 text-sm mb-8">Loading dashboard…</div>
+          ) : (
+            stats && (
+              <div className="mb-10">
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Key Metrics</h2>
+                <div className="grid grid-cols-4 gap-5">
+                  <div className="bg-white border border-gray-300 rounded-lg p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Products</div>
+                      <Package size={18} className="text-blue-600" strokeWidth={1.5} />
                     </div>
-                    <div className="text-[8px] text-[#8193A4] text-right">{timeAgo(product.updatedAt)}</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{stats.totalProducts}</div>
+                    <div className="text-xs text-gray-600">
+                      <span className="font-medium text-green-700">{stats.activeProducts}</span> active
+                    </div>
                   </div>
-                ))}
-              </div>
-            </section>
 
-            <div className="flex flex-col gap-5">
-              <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-[18px]">
-                <div className="text-[9px] uppercase tracking-[0.15em] font-mono text-[#698097]">
-                  Operations queue
+                  <div className="bg-white border border-gray-300 rounded-lg p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Deployments</div>
+                      <Zap size={18} className="text-amber-600" strokeWidth={1.5} />
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{stats.totalDeployments}</div>
+                    <div className="text-xs text-gray-600">
+                      <span className="font-medium text-emerald-700">{stats.liveDeployments}</span> live
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-gray-300 rounded-lg p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Clients</div>
+                      <TrendingUp size={18} className="text-purple-600" strokeWidth={1.5} />
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{stats.clientCompanies}</div>
+                    <div className="text-xs text-gray-600">Active partners</div>
+                  </div>
+
+                  <div className="bg-white border border-gray-300 rounded-lg p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Team</div>
+                      <Users size={18} className="text-indigo-600" strokeWidth={1.5} />
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{stats.totalTeamMembers}</div>
+                    <div className="text-xs text-gray-600">Team members</div>
+                  </div>
                 </div>
-                <h2 className="text-[16px] font-semibold text-[#0B1E3A] mt-1 mb-4">Needs attention</h2>
+              </div>
+            )
+          )}
 
-                <div className="space-y-2">
-                  {attentionItems.length === 0 && (
-                    <div className="text-[9px] text-[#8A99A7]">Nothing needs attention right now.</div>
-                  )}
-                  {attentionItems.map((item) => (
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-3 gap-6">
+            
+            {/* Recent Products */}
+            <div className="col-span-2">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Recent Products</h2>
+                <a href="/products" className="text-sm text-blue-600 hover:text-blue-800 font-semibold">View All →</a>
+              </div>
+              
+              <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+                {recentProducts.length === 0 && !loading && (
+                  <div className="px-6 py-12 text-center">
+                    <Package size={32} className="text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 text-sm">No products yet</p>
+                  </div>
+                )}
+                
+                <div className="divide-y divide-gray-200">
+                  {recentProducts.map((product, idx) => (
                     <div
-                      key={item.deploymentId}
-                      className="flex gap-2.5 py-2 pl-2.5 border-l-2 border-l-amber-600"
+                      key={product.id}
+                      className="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
                     >
-                      <AlertCircle size={16} strokeWidth={1.6} className="text-amber-600 shrink-0 mt-[1px]" />
-                      <div>
-                        <div className="text-[9px] font-medium text-[#0B1E3A]">
-                          {item.productName} · {item.clientName}
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-semibold text-xs">
+                            {product.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-gray-900">{product.name}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              {product.currentVersion ? `v${product.currentVersion}` : "No release"}
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-[8px] text-[#8A99A7] mt-1">
-                          {item.deploymentStatus}
-                          {item.goLiveDate
-                            ? ` · Go-live ${new Date(item.goLiveDate).toLocaleDateString()}`
-                            : ""}
+                        <div className="text-right">
+                          <StatusBadge status={product.lifecycleStatus} />
+                          <div className="text-xs text-gray-500 mt-2">{timeAgo(product.updatedAt)}</div>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </section>
+              </div>
+            </div>
 
-              <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-[18px]">
-                <div className="text-[9px] uppercase tracking-[0.15em] font-mono text-[#698097] mb-3">
-                  Environment readiness
-                </div>
-
-                {readiness && (
-                  <>
-                    <div className="flex items-center gap-2 mb-3">
-                      <ShieldCheck size={16} className="text-[#4A947E]" />
-                      <span className="text-[12px] font-bold text-[#0B1E3A]">
-                        {readiness.configuredEnvironments} of {readiness.totalEnvironments} environments fully
-                        configured
-                      </span>
+            {/* Right Sidebar */}
+            <div className="flex flex-col gap-6">
+              
+              {/* Needs Attention */}
+              <div>
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Needs Attention</h2>
+                <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+                  {attentionItems.length === 0 && (
+                    <div className="px-6 py-8 text-center">
+                      <ShieldCheck size={24} className="text-green-600 mx-auto mb-2" />
+                      <p className="text-gray-600 text-sm font-medium">All systems healthy</p>
                     </div>
-
-                    <div className="w-full h-[4px] bg-[#DCE5E1] overflow-hidden mb-2">
+                  )}
+                  
+                  <div className="divide-y divide-gray-200">
+                    {attentionItems.map((item) => (
                       <div
-                        className="h-full bg-[#4A947E]"
-                        style={{ width: `${readiness.percentageConfigured}%` }}
-                      />
-                    </div>
+                        key={item.deploymentId}
+                        className="px-4 py-4 hover:bg-amber-50 transition-colors cursor-pointer border-l-4 border-l-amber-500"
+                      >
+                        <div className="flex gap-3 items-start">
+                          <AlertCircle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-semibold text-gray-900">{item.productName}</div>
+                            <div className="text-xs text-gray-600 mt-1">{item.clientName}</div>
+                            <div className="text-xs text-gray-700 font-medium mt-2">{item.deploymentStatus}</div>
+                            {item.goLiveDate && (
+                              <div className="text-xs text-amber-700 font-semibold mt-1">
+                                Go-live: {new Date(item.goLiveDate).toLocaleDateString("en-US", { 
+                                  month: "short", 
+                                  day: "numeric", 
+                                  year: "numeric" 
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-                    <p className="text-[8px] text-[#8494A4]">
-                      {readiness.percentageConfigured}% of environments have both an application URL and access
-                      reference on file.
-                    </p>
-                  </>
-                )}
-              </section>
+              {/* Environment Readiness */}
+              <div>
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Environment Status</h2>
+                <div className="bg-white border border-gray-300 rounded-lg p-6">
+                  {readiness && (
+                    <>
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">
+                            {readiness.configuredEnvironments} of {readiness.totalEnvironments}
+                          </div>
+                          <div className="text-xs text-gray-600 mt-0.5">environments configured</div>
+                        </div>
+                        <ShieldCheck size={20} className="text-green-600" strokeWidth={1.5} />
+                      </div>
+                      
+                      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-3">
+                        <div
+                          className="h-full bg-green-600 rounded-full transition-all duration-300"
+                          style={{ width: `${readiness.percentageConfigured}%` }}
+                        />
+                      </div>
+
+                      <p className="text-xs text-gray-600">
+                        {readiness.percentageConfigured}% ready for production
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </main>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
+import { ChevronLeft, AlertCircle, CheckCircle } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const LIFECYCLE_OPTIONS = ["Active", "Beta", "Deprecated"];
@@ -22,11 +23,13 @@ export default function NewProductPage() {
   const [technologies, setTechnologies] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     if (!name.trim()) {
       setError("Product name is required.");
@@ -61,7 +64,10 @@ export default function NewProductPage() {
       }
 
       const created = await response.json();
-      router.push(`/products/${created.id}`);
+      setSuccess("Product created successfully!");
+      setTimeout(() => {
+        router.push(`/products/${created.id}`);
+      }, 1000);
     } catch (err) {
       console.error(err);
       setError("Could not reach the server.");
@@ -71,187 +77,275 @@ export default function NewProductPage() {
   }
 
   const inputClass =
-    "w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#3F84E5]/30 focus:border-[#3F84E5]";
-  const labelClass = "text-[10px] uppercase tracking-wide text-[#7A8FA4] font-mono mb-1.5 block";
+    "w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all";
+  const labelClass = "text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2 block";
 
   return (
-    <div className="flex min-h-screen bg-[#F4F0E8]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
+        <main className="flex-1 px-12 py-8 overflow-auto">
+          
+          {/* Back Button */}
           <button
             onClick={() => router.push("/products")}
-            className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A] mb-3"
+            className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold mb-6 transition-colors"
           >
-            ← PRODUCT REGISTER
+            <ChevronLeft size={16} />
+            Back to Products
           </button>
 
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">
-                System register
-              </div>
-              <h1 className="text-[32px] leading-none tracking-[-1.2px] font-semibold text-[#0B1E3A]">
-                Product intake
-              </h1>
-              <p className="text-[11px] text-[#7A8FA4] mt-3">
-                Create or revise a product record. Every field is part of the accountability chain.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => router.push("/products")}
-              className="border border-gray-300 text-gray-700 text-[13px] font-medium px-4 h-[39px] rounded-md hover:bg-gray-50 transition-colors"
-            >
-              Discard
-            </button>
-          </div>
-
-          <div className="border-t border-[#D3D3CF] mt-6 mb-6" />
-
-          <form onSubmit={handleSubmit} className="grid grid-cols-[1fr_280px] gap-5 items-start">
-            <div className="bg-[#FAFAF8] border border-[#D2D5D3] p-6 space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>PRODUCT NAME</label>
-                  <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>RECORD ID</label>
-                  <input
-                    value="Auto-generated on save"
-                    disabled
-                    className={`${inputClass} bg-gray-100 text-gray-400`}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>CURRENT VERSION</label>
-                  <input
-                    value={currentVersion}
-                    onChange={(e) => setCurrentVersion(e.target.value)}
-                    placeholder="v1.0.0"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>LIFECYCLE</label>
-                  <select
-                    value={lifecycleStatus}
-                    onChange={(e) => setLifecycleStatus(e.target.value)}
-                    className={inputClass}
-                  >
-                    {LIFECYCLE_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>CRITICALITY</label>
-                  <select value={criticality} onChange={(e) => setCriticality(e.target.value)} className={inputClass}>
-                    {CRITICALITY_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>OWNING TEAM</label>
-                  <input
-                    value={owningTeam}
-                    onChange={(e) => setOwningTeam(e.target.value)}
-                    placeholder="Payments Platform"
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-start justify-between">
               <div>
-                <label className={labelClass}>DESCRIPTION</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={2}
-                  className={inputClass}
-                />
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Product</h1>
+                <p className="text-gray-600 text-sm">Add a new product to the IDS Fintech register. All fields are recorded in the activity trail.</p>
               </div>
-
-              <div>
-                <label className={labelClass}>BUSINESS PURPOSE</label>
-                <textarea
-                  value={businessPurpose}
-                  onChange={(e) => setBusinessPurpose(e.target.value)}
-                  rows={2}
-                  className={inputClass}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>SUPPORTED MARKETS</label>
-                  <input
-                    value={supportedMarkets}
-                    onChange={(e) => setSupportedMarkets(e.target.value)}
-                    placeholder="Lebanon, UAE, Jordan"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>TECHNOLOGIES</label>
-                  <input
-                    value={technologies}
-                    onChange={(e) => setTechnologies(e.target.value)}
-                    placeholder="Java, PostgreSQL, Kafka"
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className={labelClass}>NOTES</label>
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} />
-              </div>
-
-              {error && <div className="text-xs text-red-600">{error}</div>}
-
               <button
-                type="submit"
-                disabled={submitting}
-                className="bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-md px-5 py-2.5 transition-colors"
+                type="button"
+                onClick={() => router.push("/products")}
+                className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                {submitting ? "Saving..." : "Save product"}
+                Cancel
               </button>
             </div>
+          </div>
 
-            <div className="space-y-4">
-              <div className="bg-white border border-[#D2D5D3] p-5">
-                <div className="text-[9px] uppercase tracking-[0.15em] font-mono text-[#698097] mb-2">
-                  Record guidance
+          {/* Form Section */}
+          <div className="grid grid-cols-3 gap-8">
+            
+            {/* Main Form */}
+            <form onSubmit={handleSubmit} className="col-span-2">
+              <div className="bg-white border border-gray-300 rounded-lg p-8 space-y-6">
+                
+                {/* Error Alert */}
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                    <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-800">{error}</p>
+                  </div>
+                )}
+
+                {/* Success Alert */}
+                {success && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+                    <CheckCircle size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-green-800">{success}</p>
+                  </div>
+                )}
+
+                {/* Core Information */}
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Core Information</h2>
+                  
+                  <div className="grid grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelClass}>Product Name *</label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="e.g., Payment Gateway"
+                        className={inputClass}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Record ID</label>
+                      <input
+                        type="text"
+                        value="Auto-generated on save"
+                        disabled
+                        className={`${inputClass} bg-gray-50 text-gray-500 cursor-not-allowed`}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-[14px] font-semibold text-[#0B1E3A] mb-3">What belongs here</h3>
-                <ul className="space-y-2 text-[11px] text-[#4A5A6A]">
-                  <li>✓ Use the stable product identity, not a project nickname.</li>
-                  <li>✓ Keep ownership current before publishing a release.</li>
-                  <li>✓ Repository links contain references only — never secrets.</li>
-                </ul>
+
+                {/* Version & Status */}
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Version & Status</h2>
+                  
+                  <div className="grid grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelClass}>Current Version</label>
+                      <input
+                        type="text"
+                        value={currentVersion}
+                        onChange={(e) => setCurrentVersion(e.target.value)}
+                        placeholder="e.g., v1.0.0"
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Lifecycle Status</label>
+                      <select value={lifecycleStatus} onChange={(e) => setLifecycleStatus(e.target.value)} className={inputClass}>
+                        {LIFECYCLE_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Criticality & Ownership */}
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Criticality & Ownership</h2>
+                  
+                  <div className="grid grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelClass}>Criticality Level</label>
+                      <select value={criticality} onChange={(e) => setCriticality(e.target.value)} className={inputClass}>
+                        {CRITICALITY_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Owning Team</label>
+                      <input
+                        type="text"
+                        value={owningTeam}
+                        onChange={(e) => setOwningTeam(e.target.value)}
+                        placeholder="e.g., Platform Team"
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Descriptions */}
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Description</h2>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className={labelClass}>Product Description</label>
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Provide a brief overview of what this product does..."
+                        rows={3}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Business Purpose</label>
+                      <textarea
+                        value={businessPurpose}
+                        onChange={(e) => setBusinessPurpose(e.target.value)}
+                        placeholder="Explain the business value and purpose..."
+                        rows={3}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Technical Information */}
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Technical Details</h2>
+                  
+                  <div className="grid grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelClass}>Supported Markets</label>
+                      <input
+                        type="text"
+                        value={supportedMarkets}
+                        onChange={(e) => setSupportedMarkets(e.target.value)}
+                        placeholder="e.g., Lebanon, UAE, Jordan"
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Technologies</label>
+                      <input
+                        type="text"
+                        value={technologies}
+                        onChange={(e) => setTechnologies(e.target.value)}
+                        placeholder="e.g., Java, PostgreSQL, Kafka"
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Notes */}
+                <div>
+                  <label className={labelClass}>Additional Notes</label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Any additional information about this product..."
+                    rows={4}
+                    className={inputClass}
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex gap-4 pt-4">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors duration-200"
+                  >
+                    {submitting ? "Saving..." : "Create Product"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/products")}
+                    className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-              <div className="bg-[#FDF3E3] border border-[#E8C99A] p-4 text-[10px] text-[#8A5A1E]">
-                Changes are recorded in the product activity trail after save.
+            </form>
+
+            {/* Sidebar Guidance */}
+            <div className="col-span-1">
+              <div className="sticky top-8 space-y-4">
+                
+                {/* Guidance Card */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
+                  <h3 className="text-sm font-bold text-blue-900 mb-3">Form Guide</h3>
+                  <ul className="space-y-2.5 text-xs text-blue-800">
+                    <li className="flex gap-2">
+                      <span className="text-blue-600 font-bold mt-0.5">•</span>
+                      <span>Use the stable product identity, not a project nickname</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-blue-600 font-bold mt-0.5">•</span>
+                      <span>Keep ownership current before publishing releases</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-blue-600 font-bold mt-0.5">•</span>
+                      <span>Never include secrets or credentials in any field</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-blue-600 font-bold mt-0.5">•</span>
+                      <span>All changes are recorded in the activity trail</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Info Card */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="text-xs text-amber-900 font-medium">
+                    💡 <span className="block mt-1">After saving, you can add deployments, team members, and technical details from the product detail page.</span>
+                  </p>
+                </div>
               </div>
             </div>
-          </form>
+          </div>
         </main>
       </div>
     </div>
