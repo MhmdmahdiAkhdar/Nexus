@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Plus, Layers3 } from "lucide-react";
+import { Search, Plus, Layers3, AlertCircle, ChevronRight } from "lucide-react";
 import Sidebar from "../layout/Sidebar";
 import Topbar from "../layout/Topbar";
 
@@ -29,18 +29,33 @@ interface Option {
   name?: string;
 }
 
-function StageBadge({ stage }: { stage: string }) {
+// Environment badge — mirrors the rounded-pill badge style used for document type elsewhere in the app.
+function EnvironmentBadge({ stage }: { stage: string }) {
   const styles: Record<string, string> = {
-    Production: "border-[#6EAA99] text-[#267B67]",
-    UAT: "border-[#C2762E] text-[#A15F25]",
-    Test: "border-[#82A7C4] text-[#36719C]",
-    Development: "border-[#82A7C4] text-[#36719C]",
-    "Not deployed": "border-gray-300 text-gray-500",
+    Production: "bg-green-100 text-green-700",
+    UAT: "bg-orange-100 text-orange-700",
+    Test: "bg-blue-100 text-blue-700",
+    Development: "bg-blue-100 text-blue-700",
+    "Not deployed": "bg-gray-100 text-gray-600",
   };
 
   return (
-    <span className={`text-[9px] font-mono tracking-wide px-1.5 py-[3px] border ${styles[stage] ?? "border-gray-300 text-gray-500"}`}>
-      {stage.toUpperCase()}
+    <span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full ${styles[stage] ?? "bg-gray-100 text-gray-600"}`}>
+      {stage}
+    </span>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    Live: "bg-green-100 text-green-700",
+    "In Progress": "bg-blue-100 text-blue-700",
+    Pilot: "bg-orange-100 text-orange-700",
+  };
+
+  return (
+    <span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full ${styles[status] ?? "bg-gray-100 text-gray-600"}`}>
+      {status}
     </span>
   );
 }
@@ -134,49 +149,45 @@ export default function DeploymentsPage() {
   }, [loadDeployments]);
 
   const selectClass =
-    "border border-gray-300 bg-white rounded-lg px-2.5 py-2 text-[12px] text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#3F84E5]/30 focus:border-[#3F84E5]";
+    "border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all";
+
+  const hasFilters = Boolean(search || productId || clientId || version || environment || status);
 
   return (
-    <div className="flex min-h-screen bg-[#F4F0E8]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
-          <div className="flex items-end justify-between">
+        <main className="flex-1 px-12 py-8 overflow-auto">
+
+          {/* Header */}
+          <div className="flex items-start justify-between mb-8">
             <div>
-              <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">
-                System register
-              </div>
-              <h1 className="text-[36px] leading-none tracking-[-1.5px] font-semibold text-[#0B1E3A]">
-                Deployment register
-              </h1>
-              <p className="text-[11px] text-[#7A8FA4] mt-5">
-                The installation record: which version is running for which client, and where it stands.
-              </p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Deployment Register</h1>
+              <p className="text-gray-600 text-sm">Which version is running for which client, and where it stands</p>
             </div>
 
             <Link
               href="/deployments/new"
-              className="flex items-center gap-2 bg-[#0B1E3A] hover:bg-[#152C50] text-white text-[13px] font-medium px-4 h-[39px] transition-colors"
+              className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow-sm"
             >
-              <Plus size={16} strokeWidth={1.8} />
-              Create deployment
+              <Plus size={18} strokeWidth={2} />
+              Create Deployment
             </Link>
           </div>
 
-          <div className="border-t border-[#D3D3CF] mt-6 mb-6" />
-
+          {/* Search + Filters */}
           <div className="flex flex-wrap items-center gap-3 mb-6">
-            <div className="relative flex-1 min-w-[220px]">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <div className="relative flex-1 min-w-[220px] max-w-md">
+              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
-                type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search client or product"
-                className="w-full border border-gray-300 bg-white rounded-lg pl-9 pr-3 py-2 text-[12px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3F84E5]/30 focus:border-[#3F84E5]"
+                aria-label="Search deployments"
+                className="w-full border border-gray-300 rounded-lg pl-11 pr-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               />
             </div>
 
@@ -202,7 +213,7 @@ export default function DeploymentsPage() {
               value={version}
               onChange={(e) => setVersion(e.target.value)}
               placeholder="Version"
-              className="border border-gray-300 bg-white rounded-lg px-2.5 py-2 text-[12px] w-24 focus:outline-none focus:ring-2 focus:ring-[#3F84E5]/30 focus:border-[#3F84E5]"
+              className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 w-28 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
 
             <select value={environment} onChange={(e) => setEnvironment(e.target.value)} className={selectClass}>
@@ -224,58 +235,108 @@ export default function DeploymentsPage() {
             </select>
           </div>
 
-          {error && <div className="text-[11px] text-red-600 mb-4">{error}</div>}
+          {/* Error Alert */}
+          {error && (
+            <div role="alert" className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
 
-          <div className="bg-[#FAFAF8] border border-[#D2D5D3]">
-            <div className="grid grid-cols-[110px_1fr_90px_90px_100px_90px_100px_20px] px-[18px] py-2.5 border-b border-[#D8D9D7] text-[9px] uppercase tracking-[0.1em] font-mono text-[#698097]">
-              <span>Deployment</span>
-              <span>Client / Product</span>
-              <span>Version</span>
-              <span>Modules</span>
-              <span>Go-live</span>
-              <span>Status</span>
-              <span>Environment</span>
-              <span></span>
+          {/* Table */}
+          <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+
+            {/* Header */}
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Deployments • <span className="font-bold text-gray-900">{deployments.length}</span> indexed
+              </p>
             </div>
 
-            {loading && <div className="px-[18px] py-8 text-[11px] text-[#8A99A7]">Loading deployments…</div>}
-
-            {!loading && deployments.length === 0 && (
-              <div className="px-[18px] py-8 text-[11px] text-[#8A99A7]">No deployments found for this search/filter.</div>
+            {/* Loading State */}
+            {loading && (
+              <div className="px-6 py-12 text-center">
+                <p className="text-sm text-gray-600">Loading deployments…</p>
+              </div>
             )}
 
-            {!loading &&
-              deployments.map((d) => (
-                <Link
-                  key={d.id}
-                  href={`/deployments/${d.id}`}
-                  className="grid grid-cols-[110px_1fr_90px_90px_100px_90px_100px_20px] items-center min-h-[70px] px-[18px] border-b border-[#E0E1DE] last:border-b-0 hover:bg-white transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-md border border-[#D2D5D3] bg-white flex items-center justify-center shrink-0">
-                      <Layers3 size={15} className="text-[#3F84E5]" />
+            {/* Empty State */}
+            {!loading && deployments.length === 0 && (
+              <div className="px-6 py-12 text-center">
+                <Layers3 size={32} className="text-gray-300 mx-auto mb-3" />
+                <p className="text-sm text-gray-600">
+                  {hasFilters ? "No deployments match these filters." : "No deployments recorded yet."}
+                </p>
+              </div>
+            )}
+
+            {/* Table Rows */}
+            <div className="divide-y divide-gray-200">
+              {!loading &&
+                deployments.map((d) => (
+                  <Link
+                    key={d.id}
+                    href={`/deployments/${d.id}`}
+                    className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors items-center"
+                  >
+                    {/* Deployment / Client / Product */}
+                    <div className="col-span-4 flex items-start gap-3">
+                      <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 flex-shrink-0 mt-0.5">
+                        <Layers3 size={18} strokeWidth={1.5} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">
+                          {d.recordCode}
+                        </div>
+                        <div className="text-sm font-semibold text-gray-900 mt-1 truncate">
+                          {d.clientName}
+                        </div>
+                        <div className="text-xs text-gray-500 truncate">{d.productName}</div>
+                      </div>
                     </div>
-                    <span className="text-[9px] font-mono text-[#8A99A7]">{d.recordCode}</span>
-                  </div>
 
-                  <div>
-                    <div className="text-[12px] font-medium text-[#0B1E3A]">{d.clientName}</div>
-                    <div className="text-[10px] text-[#8A99A7]">{d.productName}</div>
-                  </div>
+                    {/* Version */}
+                    <div className="col-span-1">
+                      <p className="text-sm text-gray-700">{d.productVersion ? `v${d.productVersion}` : "—"}</p>
+                    </div>
 
-                  <div className="text-[11px] text-[#4A5A6A]">{d.productVersion ? `v${d.productVersion}` : "—"}</div>
-                  <div className="text-[11px] text-[#4A5A6A]">{d.modulesCount} module{d.modulesCount === 1 ? "" : "s"}</div>
-                  <div className="text-[11px] text-[#8A99A7]">
-                    {d.goLiveDate ? new Date(d.goLiveDate).toLocaleDateString() : "—"}
-                  </div>
-                  <div className="text-[11px] text-[#3F84E5]">{d.deploymentStatus}</div>
-                  <div>
-                    <StageBadge stage={d.currentStage} />
-                  </div>
-                  <div className="text-[#8A99A7] text-[12px]">›</div>
-                </Link>
-              ))}
+                    {/* Modules */}
+                    <div className="col-span-1">
+                      <p className="text-sm text-gray-700">{d.modulesCount}</p>
+                    </div>
+
+                    {/* Go-live */}
+                    <div className="col-span-2">
+                      <p className="text-xs text-gray-600">
+                        {d.goLiveDate ? new Date(d.goLiveDate).toLocaleDateString() : "—"}
+                      </p>
+                    </div>
+
+                    {/* Status */}
+                    <div className="col-span-2">
+                      <StatusBadge status={d.deploymentStatus} />
+                    </div>
+
+                    {/* Environment */}
+                    <div className="col-span-1">
+                      <EnvironmentBadge stage={d.currentStage} />
+                    </div>
+
+                    {/* Chevron */}
+                    <div className="col-span-1 flex justify-end">
+                      <ChevronRight size={16} className="text-gray-400" />
+                    </div>
+                  </Link>
+                ))}
+            </div>
           </div>
+
+          {/* Results Count */}
+          {!loading && deployments.length > 0 && (
+            <div className="mt-6 text-xs text-gray-600">
+              Showing <span className="font-semibold text-gray-900">{deployments.length}</span> deployment{deployments.length === 1 ? "" : "s"}
+            </div>
+          )}
         </main>
       </div>
     </div>

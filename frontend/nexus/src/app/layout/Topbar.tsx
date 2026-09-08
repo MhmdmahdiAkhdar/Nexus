@@ -1,7 +1,8 @@
 "use client";
 
 import { Bell, Clock, MapPin, LogOut, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface StoredUser {
   fullName: string;
@@ -9,10 +10,14 @@ interface StoredUser {
 }
 
 export default function Topbar() {
+  const router = useRouter();
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
   const [user, setUser] = useState<StoredUser | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const updateTime = () => {
@@ -20,7 +25,7 @@ export default function Topbar() {
       setTime(now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
       setDate(now.toLocaleDateString("en-GB", { weekday: "short", month: "short", day: "numeric" }));
     };
-    
+
     updateTime();
     const interval = setInterval(updateTime, 1000);
 
@@ -30,6 +35,30 @@ export default function Topbar() {
     }
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Close either dropdown on an outside click or Escape, so they behave like real menus.
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+      }
+    }
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setShowUserMenu(false);
+        setShowNotifications(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, []);
 
   const initials = user?.fullName
@@ -49,7 +78,7 @@ export default function Topbar() {
 
   return (
     <header className="h-16 bg-[#0F1419] border-b border-[#1F2937] text-white flex items-center justify-between px-8">
-      
+
       {/* Left Section - System Info */}
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2 text-sm">
@@ -72,47 +101,41 @@ export default function Topbar() {
 
       {/* Right Section - Notifications & User */}
       <div className="flex items-center gap-6">
-        
+
         {/* Notifications */}
-        <div className="relative group">
-          <button className="p-2 text-gray-400 hover:text-[#60A5FA] hover:bg-[#1F2937] rounded-lg transition-all duration-200 relative">
+        <div className="relative" ref={notificationsRef}>
+          <button
+            onClick={() => setShowNotifications((v) => !v)}
+            aria-haspopup="true"
+            aria-expanded={showNotifications}
+            aria-label="Notifications"
+            className="p-2 text-gray-400 hover:text-[#60A5FA] hover:bg-[#1F2937] rounded-lg transition-all duration-200"
+          >
             <Bell size={18} strokeWidth={1.5} />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
           </button>
-          
-          {/* Notification Dropdown */}
-          <div className="absolute right-0 top-full mt-2 w-80 bg-[#1F2937] border border-[#374151] rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-            <div className="p-4 border-b border-[#374151]">
-              <p className="text-sm font-semibold text-white">Notifications</p>
-            </div>
-            <div className="max-h-96 overflow-y-auto">
-              <div className="p-4 border-b border-[#374151] hover:bg-[#27303D] transition-colors cursor-pointer">
-                <p className="text-sm text-gray-300 font-medium">New deployment pending</p>
-                <p className="text-xs text-gray-500 mt-1">2 minutes ago</p>
+
+          {showNotifications && (
+            <div className="absolute right-0 top-full mt-2 w-80 bg-[#1F2937] border border-[#374151] rounded-lg shadow-2xl z-50">
+              <div className="p-4 border-b border-[#374151]">
+                <p className="text-sm font-semibold text-white">Notifications</p>
               </div>
-              <div className="p-4 border-b border-[#374151] hover:bg-[#27303D] transition-colors cursor-pointer">
-                <p className="text-sm text-gray-300 font-medium">System update available</p>
-                <p className="text-xs text-gray-500 mt-1">1 hour ago</p>
-              </div>
-              <div className="p-4 hover:bg-[#27303D] transition-colors cursor-pointer">
-                <p className="text-sm text-gray-300 font-medium">Access granted to new workspace</p>
-                <p className="text-xs text-gray-500 mt-1">3 hours ago</p>
+              <div className="max-h-96 overflow-y-auto">
+                <div className="p-6 text-center">
+                  <p className="text-sm text-gray-400">You're all caught up.</p>
+                </div>
               </div>
             </div>
-            <div className="p-3 border-t border-[#374151] bg-[#0F1419]">
-              <button className="w-full text-xs text-[#60A5FA] hover:text-[#93C5FD] font-semibold text-center py-2 transition-colors">
-                View all notifications
-              </button>
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="h-6 w-px bg-[#1F2937]" />
 
         {/* User Menu */}
-        <div className="relative">
+        <div className="relative" ref={userMenuRef}>
           <button
-            onClick={() => setShowUserMenu(!showUserMenu)}
+            onClick={() => setShowUserMenu((v) => !v)}
+            aria-haspopup="true"
+            aria-expanded={showUserMenu}
             className="flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-[#1F2937] transition-all duration-200 group"
           >
             <div className="text-right">
@@ -135,9 +158,15 @@ export default function Topbar() {
                 <p className="text-sm font-semibold text-white">{user?.fullName ?? "User"}</p>
                 <p className="text-xs text-gray-400 mt-1">{user?.roleName ?? "Role"}</p>
               </div>
-              
+
               <div className="p-2 space-y-1">
-                <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:bg-[#27303D] hover:text-white rounded-lg transition-colors">
+                <button
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    router.push("/settings");
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:bg-[#27303D] hover:text-white rounded-lg transition-colors"
+                >
                   <User size={16} />
                   <span>Profile Settings</span>
                 </button>

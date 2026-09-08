@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ShieldCheck, ExternalLink, X } from "lucide-react";
+import { ShieldCheck, ExternalLink, X, AlertCircle, ChevronLeft, Lock } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
 
@@ -50,11 +50,32 @@ function authHeaders() {
   return { Authorization: `Bearer ${token}` };
 }
 
+/** Only allow http(s) links through to `href` — blocks javascript: and data: URLs. */
+function safeHref(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+// Same palette as the deployments list badges, for the environment-type dot.
 const ENV_DOT_COLOR: Record<string, string> = {
-  Development: "bg-[#3F84E5]",
-  Test: "bg-[#3F84E5]",
-  UAT: "bg-[#C2762E]",
-  Production: "bg-[#267B67]",
+  Development: "bg-blue-500",
+  Test: "bg-blue-500",
+  UAT: "bg-orange-500",
+  Production: "bg-green-500",
+};
+
+// Same badge treatment as the deployments list.
+const STAGE_BADGE: Record<string, string> = {
+  Production: "bg-green-100 text-green-700",
+  UAT: "bg-orange-100 text-orange-700",
+  Test: "bg-blue-100 text-blue-700",
+  Development: "bg-blue-100 text-blue-700",
+  "Not deployed": "bg-gray-100 text-gray-600",
 };
 
 export default function DeploymentDossierPage() {
@@ -103,12 +124,12 @@ export default function DeploymentDossierPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-[#F4F0E8]">
+      <div className="flex min-h-screen bg-white">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar />
-          <main className="flex-1 px-[30px] pt-[30px]">
-            <p className="text-[11px] text-[#7A8FA4]">Loading deployment…</p>
+          <main className="flex-1 px-12 py-8">
+            <p className="text-sm text-gray-600">Loading deployment…</p>
           </main>
         </div>
       </div>
@@ -117,196 +138,202 @@ export default function DeploymentDossierPage() {
 
   if (error || !detail) {
     return (
-      <div className="flex min-h-screen bg-[#F4F0E8]">
+      <div className="flex min-h-screen bg-white">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar />
-          <main className="flex-1 px-[30px] pt-[30px]">
-            <p className="text-[11px] text-red-600">{error || "Deployment not found."}</p>
+          <main className="flex-1 px-12 py-8">
+            <div role="alert" className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{error || "Deployment not found."}</p>
+            </div>
           </main>
         </div>
       </div>
     );
   }
 
-  const stageStyles: Record<string, string> = {
-    Production: "border-[#6EAA99] text-[#267B67]",
-    UAT: "border-[#C2762E] text-[#A15F25]",
-    Test: "border-[#82A7C4] text-[#36719C]",
-    Development: "border-[#82A7C4] text-[#36719C]",
-    "Not deployed": "border-gray-300 text-gray-500",
-  };
-
   return (
-    <div className="flex min-h-screen bg-[#F4F0E8]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
-          <button onClick={() => router.push("/deployments")} className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A] mb-3">
-            ← DEPLOYMENT REGISTER
+        <main className="flex-1 px-12 py-8 overflow-auto">
+
+          <button
+            onClick={() => router.push("/deployments")}
+            className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          >
+            <ChevronLeft size={16} />
+            Deployment Register
           </button>
 
-          <div className="flex items-start justify-between">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-8">
             <div>
-              <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">System register</div>
-              <h1 className="text-[32px] leading-none tracking-[-1.2px] font-semibold text-[#0B1E3A]">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 {detail.productName} × {detail.clientName}
               </h1>
-              <p className="text-[11px] text-[#7A8FA4] mt-2">
-                {detail.recordCode} · {detail.productName} {detail.productVersion ? `v${detail.productVersion}` : ""} ·{" "}
-                {detail.currentStage}
+              <p className="text-gray-600 text-sm">
+                {detail.recordCode} · {detail.productName} {detail.productVersion ? `v${detail.productVersion}` : ""} · {detail.currentStage}
               </p>
             </div>
 
             <button
               onClick={() => router.push(`/deployments/${deploymentId}/edit`)}
-              className="border border-gray-300 text-gray-700 text-[13px] font-medium px-4 h-[39px] rounded-md hover:bg-gray-50 transition-colors"
+              className="border border-gray-300 text-gray-700 text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Edit deployment
+              Edit Deployment
             </button>
           </div>
 
-          <div className="border-t border-[#D3D3CF] mt-6 mb-6" />
+          <div className="grid grid-cols-[1fr_320px] gap-6">
+            <div className="space-y-6">
 
-          <div className="grid grid-cols-[1fr_320px] gap-5">
-            <div className="space-y-5">
-              <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className={`text-[9px] font-mono px-2 py-1 border ${stageStyles[detail.currentStage] ?? "border-gray-300 text-gray-500"}`}>
-                    {detail.currentStage.toUpperCase()}
+              {/* Overview */}
+              <section className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                  <span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full ${STAGE_BADGE[detail.currentStage] ?? "bg-gray-100 text-gray-600"}`}>
+                    {detail.currentStage}
                   </span>
                   <div className="text-right">
-                    <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono">Support tier</div>
-                    <div className="text-[12px] font-medium text-[#0B1E3A]">{detail.supportTier ?? "—"}</div>
+                    <div className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Support Tier</div>
+                    <div className="text-sm font-semibold text-gray-900 mt-0.5">{detail.supportTier ?? "—"}</div>
                   </div>
                 </div>
 
-                <p className="text-[11px] text-[#8A99A7] mb-4">
-                  {detail.clientName} · {detail.clientCountry ?? "—"}
-                  {detail.goLiveDate ? ` · deployed ${new Date(detail.goLiveDate).toLocaleDateString()}` : ""}
-                </p>
+                <div className="px-6 py-5">
+                  <p className="text-sm text-gray-600 mb-5">
+                    {detail.clientName} · {detail.clientCountry ?? "—"}
+                    {detail.goLiveDate ? ` · deployed ${new Date(detail.goLiveDate).toLocaleDateString()}` : ""}
+                  </p>
 
-                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#E0E1DE]">
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Enabled modules</div>
-                    <div className="text-[13px] font-medium text-[#3A4A5A]">
-                      {detail.enabledModulesCount} / {detail.totalModulesCount} active
+                  <div className="grid grid-cols-3 gap-6 pt-5 border-t border-gray-200">
+                    <div>
+                      <div className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Enabled Modules</div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {detail.enabledModulesCount} / {detail.totalModulesCount} active
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Account Owner</div>
+                      <div className="text-sm font-semibold text-gray-900">{detail.accountOwner || "—"}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Current Release</div>
+                      <div className="text-sm font-semibold text-blue-600">
+                        {detail.productVersion ? `v${detail.productVersion}` : "—"}
+                        {detail.mainBranch ? ` · ${detail.mainBranch}` : ""}
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Account owner</div>
-                    <div className="text-[13px] font-medium text-[#3A4A5A]">{detail.accountOwner || "—"}</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Current release</div>
-                    <div className="text-[13px] font-medium text-[#3F84E5]">
-                      {detail.productVersion ? `v${detail.productVersion}` : "—"}
-                      {detail.mainBranch ? ` · ${detail.mainBranch}` : ""}
+
+                  {detail.clientSpecificNotes && (
+                    <div className="pt-5 mt-5 border-t border-gray-200">
+                      <div className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Client-Specific Notes</div>
+                      <div className="text-sm text-gray-700 whitespace-pre-wrap">{detail.clientSpecificNotes}</div>
                     </div>
-                  </div>
+                  )}
                 </div>
-
-                {detail.clientSpecificNotes && (
-                  <div className="pt-4 mt-4 border-t border-[#E0E1DE]">
-                    <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Client-specific notes</div>
-                    <div className="text-[11px] text-[#3A4A5A] whitespace-pre-wrap">{detail.clientSpecificNotes}</div>
-                  </div>
-                )}
-
               </section>
 
-              <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono">
-                      Environment references
-                    </div>
-                    <h3 className="text-[14px] font-semibold text-[#0B1E3A] mt-1">
-                      Runtime map / {String(detail.environments.length).padStart(2, "0")}
-                    </h3>
-                  </div>
-                  <button onClick={() => setShowAddEnvironment(true)} className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A]">
-                    + Add environment
+              {/* Environments */}
+              <section className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                  <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Environments • <span className="font-bold text-gray-900">{detail.environments.length}</span> configured
+                  </p>
+                  <button
+                    onClick={() => setShowAddEnvironment(true)}
+                    className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    + Add Environment
                   </button>
                 </div>
 
                 {detail.environments.length === 0 && (
-                  <p className="text-[11px] text-[#8A99A7]">No environments recorded for this deployment yet.</p>
+                  <div className="px-6 py-12 text-center">
+                    <p className="text-sm text-gray-600">No environments recorded for this deployment yet.</p>
+                  </div>
                 )}
 
-                <div className="space-y-1">
-                  {detail.environments.map((env) => (
-                    <div key={env.id} className="border-b border-[#E0E1DE] last:border-b-0">
-                      <button
-                        onClick={() => setExpandedEnvId(expandedEnvId === env.id ? null : env.id)}
-                        className="w-full flex items-center gap-3 py-2.5 text-left"
-                      >
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${ENV_DOT_COLOR[env.environmentType ?? ""] ?? "bg-gray-400"}`} />
-                        <span className="text-[12px] text-[#0B1E3A] w-28 shrink-0">{env.environmentType ?? env.environmentName}</span>
-                        <span className="text-[10px] font-mono text-[#8A99A7] w-24 shrink-0">{env.serverName ?? "—"}</span>
-                        {env.applicationUrl ? (
-                          <span className="text-[11px] text-[#2874B6] flex items-center gap-1">
-                            {env.applicationUrl} <ExternalLink size={11} />
-                          </span>
-                        ) : (
-                          <span className="text-[11px] text-[#8A99A7]">No URL on file</span>
-                        )}
-                      </button>
+                <div className="divide-y divide-gray-200">
+                  {detail.environments.map((env) => {
+                    const appLink = safeHref(env.applicationUrl);
+                    const monitoringLink = safeHref(env.monitoringLink);
+                    return (
+                      <div key={env.id}>
+                        <button
+                          onClick={() => setExpandedEnvId(expandedEnvId === env.id ? null : env.id)}
+                          aria-expanded={expandedEnvId === env.id}
+                          className="w-full flex items-center gap-3 px-6 py-3.5 text-left hover:bg-gray-50 transition-colors"
+                        >
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${ENV_DOT_COLOR[env.environmentType ?? ""] ?? "bg-gray-400"}`} />
+                          <span className="text-sm font-medium text-gray-900 w-28 shrink-0">{env.environmentType ?? env.environmentName}</span>
+                          <span className="text-xs text-gray-600 w-28 shrink-0">{env.serverName ?? "—"}</span>
+                          {appLink ? (
+                            <span className="text-sm text-blue-600 flex items-center gap-1 truncate">
+                              {appLink} <ExternalLink size={12} className="shrink-0" />
+                            </span>
+                          ) : (
+                            <span className="text-sm text-gray-500">No URL on file</span>
+                          )}
+                        </button>
 
-                      {expandedEnvId === env.id && (
-                        <div className="grid grid-cols-2 gap-3 pb-3 pl-5 text-[10px] text-[#4A5A6A]">
-                          <div><span className="text-[#8A99A7]">Purpose:</span> {env.purpose || "—"}</div>
-                          <div><span className="text-[#8A99A7]">OS:</span> {env.operatingSystem || "—"}</div>
-                          <div><span className="text-[#8A99A7]">Database:</span> {env.databaseInfo || "—"}</div>
-                          <div>
-                            <span className="text-[#8A99A7]">Monitoring:</span>{" "}
-                            {env.monitoringLink ? (
-                              <a href={env.monitoringLink} target="_blank" rel="noreferrer" className="text-[#2874B6]">
-                                {env.monitoringLink}
-                              </a>
-                            ) : "—"}
+                        {expandedEnvId === env.id && (
+                          <div className="grid grid-cols-2 gap-3 px-6 pb-4 pl-11 text-xs text-gray-700">
+                            <div><span className="text-gray-500">Purpose:</span> {env.purpose || "—"}</div>
+                            <div><span className="text-gray-500">OS:</span> {env.operatingSystem || "—"}</div>
+                            <div><span className="text-gray-500">Database:</span> {env.databaseInfo || "—"}</div>
+                            <div>
+                              <span className="text-gray-500">Monitoring:</span>{" "}
+                              {monitoringLink ? (
+                                <a href={monitoringLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-700">
+                                  {monitoringLink}
+                                </a>
+                              ) : "—"}
+                            </div>
+                            <div><span className="text-gray-500">Access reference:</span> {env.accessReference || "—"}</div>
+                            {env.notes && <div className="col-span-2"><span className="text-gray-500">Notes:</span> {env.notes}</div>}
                           </div>
-                          <div><span className="text-[#8A99A7]">Access reference:</span> {env.accessReference || "—"}</div>
-                          {env.notes && <div className="col-span-2"><span className="text-[#8A99A7]">Notes:</span> {env.notes}</div>}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             </div>
 
-            <div className="space-y-5">
-              <section className="bg-white border border-[#D2D5D3] p-5">
-                <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Safety boundary</div>
-                <h3 className="text-[14px] font-semibold text-[#0B1E3A] mb-3">References, not secrets.</h3>
-                <p className="text-[11px] text-[#8A99A7] leading-relaxed mb-3">
+            <div className="space-y-6">
+              <section className="bg-white border border-gray-300 rounded-lg p-6">
+                <div className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Safety Boundary</div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">References, not secrets.</h3>
+                <p className="text-sm text-gray-600 leading-relaxed mb-4">
                   This dossier intentionally records environment names, servers, and application URLs only.
                   Credentials, passwords, tokens, and secrets never render here.
                 </p>
-                <div className="flex items-start gap-2 pt-3 border-t border-[#E0E1DE] text-[10px] text-[#A15F25]">
-                  <span>🔒</span>
+                <div className="flex items-start gap-2 pt-4 border-t border-gray-200 text-xs text-orange-700">
+                  <Lock size={13} className="shrink-0 mt-0.5" />
                   <span>Secret storage is handled outside Nexus by approved infrastructure controls.</span>
                 </div>
               </section>
 
-              <section className="bg-white border border-[#D2D5D3] p-5">
-                <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-2">Deployment health</div>
+              <section className="bg-white border border-gray-300 rounded-lg p-6">
+                <div className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Deployment Health</div>
                 <div className="flex items-center gap-2 mb-2">
-                  <ShieldCheck size={16} className="text-[#4A947E]" />
-                  <span className="text-[13px] font-semibold text-[#0B1E3A]">
+                  <ShieldCheck size={18} className="text-green-600" />
+                  <span className="text-sm font-semibold text-gray-900">
                     {detail.configuredEnvironmentsCount} of {detail.environments.length} environments configured
                   </span>
                 </div>
-                <p className="text-[10px] text-[#8A99A7] mb-3">
-                  Configured means an environment has both an application URL and access reference on file. This
-                  is not a live health check.
+                <p className="text-xs text-gray-600 mb-4">
+                  Configured means an environment has both an application URL and access reference on file.
+                  This is not a live health check.
                 </p>
                 {detail.latestActivityTitle && (
-                  <div className="pt-3 border-t border-[#E0E1DE] text-[10px] text-[#698097]">
+                  <div className="pt-4 border-t border-gray-200 text-xs text-gray-600">
                     Latest activity: {detail.latestActivityTitle}
                     {detail.latestActivityCommitRef ? ` · ${detail.latestActivityCommitRef}` : ""}
                   </div>
@@ -352,29 +379,51 @@ function AddEnvironmentModal({
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const firstFieldRef = useRef<HTMLInputElement>(null);
+
+  // Focus the first field and let Escape close the dialog, like the Add Reference modal.
+  useEffect(() => {
+    firstFieldRef.current?.focus();
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!environmentName.trim()) {
+    const trimmedName = environmentName.trim();
+    if (!trimmedName) {
       setError("Environment name is required.");
       return;
     }
+    if (applicationUrl && !safeHref(applicationUrl)) {
+      setError("Application URL must be a valid http:// or https:// address.");
+      return;
+    }
+    if (monitoringLink && !safeHref(monitoringLink)) {
+      setError("Monitoring link must be a valid http:// or https:// address.");
+      return;
+    }
+
     setSubmitting(true);
+    setError("");
     try {
       const res = await fetch(`${API_URL}/api/deployments/${deploymentId}/environments`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
-          environmentName,
+          environmentName: trimmedName,
           environmentType,
-          purpose: purpose || null,
-          serverName: serverName || null,
-          operatingSystem: operatingSystem || null,
-          applicationUrl: applicationUrl || null,
-          databaseInfo: databaseInfo || null,
-          monitoringLink: monitoringLink || null,
-          accessReference: accessReference || null,
-          notes: notes || null,
+          purpose: purpose.trim() || null,
+          serverName: serverName.trim() || null,
+          operatingSystem: operatingSystem.trim() || null,
+          applicationUrl: applicationUrl.trim() || null,
+          databaseInfo: databaseInfo.trim() || null,
+          monitoringLink: monitoringLink.trim() || null,
+          accessReference: accessReference.trim() || null,
+          notes: notes.trim() || null,
         }),
       });
       if (!res.ok) {
@@ -382,78 +431,194 @@ function AddEnvironmentModal({
         return;
       }
       onSaved();
+    } catch {
+      setError("Failed to add environment. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
   }
 
+  const fieldClass =
+    "w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-gray-50";
+  const labelClass = "block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2";
+
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      onClick={() => !submitting && onClose()}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-environment-title"
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-900">Add environment</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
+          <h2 id="add-environment-title" className="text-lg font-bold text-gray-900">Add Environment</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Close dialog"
+          >
+            <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">NAME</label>
-            <input value={environmentName} onChange={(e) => setEnvironmentName(e.target.value)} placeholder="Production" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label htmlFor="env-name" className={labelClass}>Name *</label>
+            <input
+              id="env-name"
+              ref={firstFieldRef}
+              value={environmentName}
+              onChange={(e) => setEnvironmentName(e.target.value)}
+              placeholder="Production"
+              className={fieldClass}
+              disabled={submitting}
+              required
+            />
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">TYPE</label>
-            <select value={environmentType} onChange={(e) => setEnvironmentType(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <label htmlFor="env-type" className={labelClass}>Type</label>
+            <select
+              id="env-type"
+              value={environmentType}
+              onChange={(e) => setEnvironmentType(e.target.value)}
+              className={fieldClass}
+              disabled={submitting}
+            >
               <option>Development</option>
               <option>Test</option>
               <option>UAT</option>
               <option>Production</option>
             </select>
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">PURPOSE</label>
-            <input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="Internal QA testing" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label htmlFor="env-purpose" className={labelClass}>Purpose</label>
+            <input
+              id="env-purpose"
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              placeholder="Internal QA testing"
+              className={fieldClass}
+              disabled={submitting}
+            />
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">SERVER NAME</label>
-              <input value={serverName} onChange={(e) => setServerName(e.target.value)} placeholder="prod-lb-02" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+              <label htmlFor="env-server" className={labelClass}>Server Name</label>
+              <input
+                id="env-server"
+                value={serverName}
+                onChange={(e) => setServerName(e.target.value)}
+                placeholder="prod-lb-02"
+                className={fieldClass}
+                disabled={submitting}
+              />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">OPERATING SYSTEM</label>
-              <input value={operatingSystem} onChange={(e) => setOperatingSystem(e.target.value)} placeholder="Ubuntu 22.04" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+              <label htmlFor="env-os" className={labelClass}>Operating System</label>
+              <input
+                id="env-os"
+                value={operatingSystem}
+                onChange={(e) => setOperatingSystem(e.target.value)}
+                placeholder="Ubuntu 22.04"
+                className={fieldClass}
+                disabled={submitting}
+              />
             </div>
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">APPLICATION URL</label>
-            <input value={applicationUrl} onChange={(e) => setApplicationUrl(e.target.value)} placeholder="https://..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">DATABASE INFO</label>
-            <input value={databaseInfo} onChange={(e) => setDatabaseInfo(e.target.value)} placeholder="MySQL 8.0, db-lb-02" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">MONITORING LINK</label>
-            <input value={monitoringLink} onChange={(e) => setMonitoringLink(e.target.value)} placeholder="https://grafana..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">ACCESS REFERENCE</label>
+            <label htmlFor="env-url" className={labelClass}>Application URL</label>
             <input
+              id="env-url"
+              type="url"
+              value={applicationUrl}
+              onChange={(e) => setApplicationUrl(e.target.value)}
+              placeholder="https://..."
+              className={fieldClass}
+              disabled={submitting}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="env-db" className={labelClass}>Database Info</label>
+            <input
+              id="env-db"
+              value={databaseInfo}
+              onChange={(e) => setDatabaseInfo(e.target.value)}
+              placeholder="MySQL 8.0, db-lb-02"
+              className={fieldClass}
+              disabled={submitting}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="env-monitoring" className={labelClass}>Monitoring Link</label>
+            <input
+              id="env-monitoring"
+              type="url"
+              value={monitoringLink}
+              onChange={(e) => setMonitoringLink(e.target.value)}
+              placeholder="https://grafana..."
+              className={fieldClass}
+              disabled={submitting}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="env-access" className={labelClass}>Access Reference</label>
+            <input
+              id="env-access"
               value={accessReference}
               onChange={(e) => setAccessReference(e.target.value)}
               placeholder="See internal access vault entry #..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className={fieldClass}
+              disabled={submitting}
             />
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">NOTES</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label htmlFor="env-notes" className={labelClass}>Notes</label>
+            <textarea
+              id="env-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className={fieldClass}
+              disabled={submitting}
+            />
           </div>
-          {error && <div className="text-xs text-red-600">{error}</div>}
-          <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
-            {submitting ? "Adding..." : "Add environment"}
-          </button>
+
+          {error && (
+            <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <AlertCircle size={14} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-800">{error}</p>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={submitting}
+              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-60 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-sm font-semibold transition-colors"
+            >
+              {submitting ? "Adding..." : "Add Environment"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

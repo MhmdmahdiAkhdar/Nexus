@@ -19,37 +19,31 @@ const navItems = [
     label: "Command Center",
     href: "/dashboard",
     icon: Gauge,
-    badge: null,
   },
   {
     label: "Product Register",
     href: "/products",
     icon: Network,
-    badge: null,
   },
   {
     label: "Client Register",
     href: "/clients",
     icon: Building2,
-    badge: null,
   },
   {
     label: "Deployment Register",
     href: "/deployments",
     icon: Layers3,
-    badge: "3",
   },
   {
     label: "People & Ownership",
     href: "/team",
     icon: UsersRound,
-    badge: null,
   },
   {
     label: "Reference Index",
     href: "/documents",
     icon: FileText,
-    badge: null,
   },
 ];
 
@@ -66,7 +60,7 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 min-h-screen bg-[#0F1419] border-r border-[#1F2937] flex flex-col">
-      
+
       {/* Header Logo */}
       <div className="px-6 py-8 border-b border-[#1F2937]">
         <div className="flex items-end gap-3">
@@ -125,16 +119,6 @@ export default function Sidebar() {
               />
 
               <span className="flex-1">{item.label}</span>
-
-              {item.badge && (
-                <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                  active
-                    ? "bg-white/20 text-white"
-                    : "bg-red-900/40 text-red-300"
-                }`}>
-                  {item.badge}
-                </span>
-              )}
 
               {active && (
                 <ChevronRight size={16} className="text-white" />

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronLeft, AlertCircle } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
 
@@ -19,6 +20,7 @@ export default function NewDeploymentPage() {
   const router = useRouter();
   const [clients, setClients] = useState<Option[]>([]);
   const [products, setProducts] = useState<Option[]>([]);
+  const [optionsError, setOptionsError] = useState("");
   const [clientId, setClientId] = useState("");
   const [productId, setProductId] = useState("");
   const [productVersion, setProductVersion] = useState("");
@@ -28,6 +30,7 @@ export default function NewDeploymentPage() {
   const [clientSpecificNotes, setClientSpecificNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const firstFieldRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("nexus_token");
@@ -37,11 +40,28 @@ export default function NewDeploymentPage() {
     }
 
     const headers = { Authorization: `Bearer ${token}` };
-    fetch(`${API_URL}/api/deployments/options/clients`, { headers }).then((r) => r.json()).then(setClients);
-    fetch(`${API_URL}/api/deployments/options/products`, { headers }).then((r) => r.json()).then(setProducts);
+    Promise.all([
+      fetch(`${API_URL}/api/deployments/options/clients`, { headers }).then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      }),
+      fetch(`${API_URL}/api/deployments/options/products`, { headers }).then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      }),
+    ])
+      .then(([clientsData, productsData]) => {
+        setClients(clientsData);
+        setProducts(productsData);
+      })
+      .catch(() => setOptionsError("Could not load clients and products. Try reloading this page."));
   }, [router]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  useEffect(() => {
+    firstFieldRef.current?.focus();
+  }, []);
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
@@ -60,11 +80,11 @@ export default function NewDeploymentPage() {
         body: JSON.stringify({
           clientId: Number(clientId),
           productId: Number(productId),
-          productVersion: productVersion || null,
+          productVersion: productVersion.trim() || null,
           deploymentStatus,
           goLiveDate: goLiveDate || null,
           supportTier: supportTier || null,
-          clientSpecificNotes: clientSpecificNotes || null,
+          clientSpecificNotes: clientSpecificNotes.trim() || null,
         }),
       });
 
@@ -84,34 +104,54 @@ export default function NewDeploymentPage() {
     }
   }
 
-  const inputClass =
-    "w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#3F84E5]/30 focus:border-[#3F84E5]";
-  const labelClass = "text-[10px] uppercase tracking-wide text-[#7A8FA4] font-mono mb-1.5 block";
+  const fieldClass =
+    "w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-gray-50";
+  const labelClass = "block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2";
 
   return (
-    <div className="flex min-h-screen bg-[#F4F0E8]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
-          <button onClick={() => router.push("/deployments")} className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A] mb-3">
-            ← DEPLOYMENT REGISTER
+        <main className="flex-1 px-12 py-8 overflow-auto">
+
+          <button
+            onClick={() => router.push("/deployments")}
+            className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          >
+            <ChevronLeft size={16} />
+            Deployment Register
           </button>
 
-          <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">System register</div>
-          <h1 className="text-[32px] leading-none tracking-[-1.2px] font-semibold text-[#0B1E3A]">Deployment intake</h1>
-          <p className="text-[11px] text-[#7A8FA4] mt-3">Record a new installation of a product at a client.</p>
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Deployment Intake</h1>
+            <p className="text-gray-600 text-sm">Record a new installation of a product at a client</p>
+          </div>
 
-          <div className="border-t border-[#D3D3CF] mt-6 mb-6" />
+          {optionsError && (
+            <div role="alert" className="max-w-2xl mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{optionsError}</p>
+            </div>
+          )}
 
-          <form onSubmit={handleSubmit} className="max-w-2xl bg-[#FAFAF8] border border-[#D2D5D3] p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="max-w-2xl bg-white border border-gray-300 rounded-lg p-6 space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>CLIENT</label>
-                <select value={clientId} onChange={(e) => setClientId(e.target.value)} className={inputClass}>
-                  <option value="">Select...</option>
+                <label htmlFor="dep-client" className={labelClass}>Client *</label>
+                <select
+                  id="dep-client"
+                  ref={firstFieldRef}
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  className={fieldClass}
+                  disabled={submitting}
+                  required
+                >
+                  <option value="">Select…</option>
                   {clients.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.companyName}
@@ -120,9 +160,16 @@ export default function NewDeploymentPage() {
                 </select>
               </div>
               <div>
-                <label className={labelClass}>PRODUCT</label>
-                <select value={productId} onChange={(e) => setProductId(e.target.value)} className={inputClass}>
-                  <option value="">Select...</option>
+                <label htmlFor="dep-product" className={labelClass}>Product *</label>
+                <select
+                  id="dep-product"
+                  value={productId}
+                  onChange={(e) => setProductId(e.target.value)}
+                  className={fieldClass}
+                  disabled={submitting}
+                  required
+                >
+                  <option value="">Select…</option>
                   {products.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
@@ -134,19 +181,39 @@ export default function NewDeploymentPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>PRODUCT VERSION</label>
-                <input value={productVersion} onChange={(e) => setProductVersion(e.target.value)} placeholder="1.0.0" className={inputClass} />
+                <label htmlFor="dep-version" className={labelClass}>Product Version</label>
+                <input
+                  id="dep-version"
+                  value={productVersion}
+                  onChange={(e) => setProductVersion(e.target.value)}
+                  placeholder="1.0.0"
+                  className={fieldClass}
+                  disabled={submitting}
+                />
               </div>
               <div>
-                <label className={labelClass}>GO-LIVE DATE</label>
-                <input type="date" value={goLiveDate} onChange={(e) => setGoLiveDate(e.target.value)} className={inputClass} />
+                <label htmlFor="dep-golive" className={labelClass}>Go-Live Date</label>
+                <input
+                  id="dep-golive"
+                  type="date"
+                  value={goLiveDate}
+                  onChange={(e) => setGoLiveDate(e.target.value)}
+                  className={fieldClass}
+                  disabled={submitting}
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>LIFECYCLE STATUS</label>
-                <select value={deploymentStatus} onChange={(e) => setDeploymentStatus(e.target.value)} className={inputClass}>
+                <label htmlFor="dep-status" className={labelClass}>Lifecycle Status</label>
+                <select
+                  id="dep-status"
+                  value={deploymentStatus}
+                  onChange={(e) => setDeploymentStatus(e.target.value)}
+                  className={fieldClass}
+                  disabled={submitting}
+                >
                   {LIFECYCLE_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
                       {opt}
@@ -155,8 +222,14 @@ export default function NewDeploymentPage() {
                 </select>
               </div>
               <div>
-                <label className={labelClass}>SUPPORT TIER</label>
-                <select value={supportTier} onChange={(e) => setSupportTier(e.target.value)} className={inputClass}>
+                <label htmlFor="dep-tier" className={labelClass}>Support Tier</label>
+                <select
+                  id="dep-tier"
+                  value={supportTier}
+                  onChange={(e) => setSupportTier(e.target.value)}
+                  className={fieldClass}
+                  disabled={submitting}
+                >
                   {TIER_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
                       {opt}
@@ -167,29 +240,46 @@ export default function NewDeploymentPage() {
             </div>
 
             <div>
-              <label className={labelClass}>CLIENT-SPECIFIC NOTES</label>
+              <label htmlFor="dep-notes" className={labelClass}>Client-Specific Notes</label>
               <textarea
+                id="dep-notes"
                 value={clientSpecificNotes}
                 onChange={(e) => setClientSpecificNotes(e.target.value)}
                 rows={3}
-                placeholder="Anything unique to how this client uses the product..."
-                className={inputClass}
+                placeholder="Anything unique to how this client uses the product…"
+                className={fieldClass}
+                disabled={submitting}
               />
             </div>
 
-            <p className="text-[10px] text-[#8A99A7]">
+            <p className="text-xs text-gray-500">
               Environment records (Dev/Test/UAT/Production) are added from the deployment's own page after it's created.
             </p>
 
-            {error && <div className="text-xs text-red-600">{error}</div>}
+            {error && (
+              <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                <AlertCircle size={14} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-800">{error}</p>
+              </div>
+            )}
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-md px-5 py-2.5 transition-colors"
-            >
-              {submitting ? "Saving..." : "Create deployment"}
-            </button>
+            <div className="flex gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => router.push("/deployments")}
+                disabled={submitting}
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-60 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-sm font-semibold transition-colors"
+              >
+                {submitting ? "Saving..." : "Create Deployment"}
+              </button>
+            </div>
           </form>
         </main>
       </div>
