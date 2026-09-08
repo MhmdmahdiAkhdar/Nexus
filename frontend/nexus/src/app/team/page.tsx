@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, UserPlus, X } from "lucide-react";
+import { Search, UserPlus, X, AlertCircle } from "lucide-react";
 import Sidebar from "../layout/Sidebar";
 import Topbar from "../layout/Topbar";
 
@@ -24,17 +24,35 @@ function authHeaders() {
   return { Authorization: `Bearer ${token}` };
 }
 
+const inputClass =
+  "w-full border border-slate-300 rounded-md px-3.5 py-2.5 text-[14px] text-slate-900 placeholder:text-slate-400 bg-white focus:outline-none focus:ring-2 focus:ring-[#2451B0]/20 focus:border-[#2451B0] transition-all";
+
 function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    Active: "border-[#6EAA99] text-[#267B67]",
-    Away: "border-[#C2762E] text-[#A15F25]",
-    Inactive: "border-gray-300 text-gray-500",
+  const styles: Record<string, { bg: string; text: string; dot: string }> = {
+    Active: { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
+    Away: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
+    Inactive: { bg: "bg-slate-100", text: "text-slate-500", dot: "bg-slate-400" },
   };
+
+  const style = styles[status] || styles.Inactive;
+
   return (
-    <span className={`text-[9px] font-mono tracking-wide px-1.5 py-[3px] border ${styles[status] ?? "border-gray-300 text-gray-500"}`}>
-      {status.toUpperCase()}
+    <span
+      className={`inline-flex items-center gap-1.5 text-[12px] font-medium px-2.5 py-1 rounded-full ${style.bg} ${style.text}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+      {status}
     </span>
   );
+}
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 }
 
 export default function TeamPage() {
@@ -59,7 +77,9 @@ export default function TeamPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
 
-      const res = await fetch(`${API_URL}/api/team-members/register?${params.toString()}`, { headers: authHeaders() });
+      const res = await fetch(`${API_URL}/api/team-members/register?${params.toString()}`, {
+        headers: authHeaders(),
+      });
 
       if (res.status === 401) {
         localStorage.removeItem("nexus_token");
@@ -83,85 +103,138 @@ export default function TeamPage() {
   }, [loadMembers]);
 
   return (
-    <div className="flex min-h-screen bg-[#F4F0E8]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
-          <div className="flex items-end justify-between">
-            <div>
-              <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">
-                System register
+        <main className="flex-1 px-8 py-14 overflow-auto">
+          <div className="max-w-6xl mx-auto">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-10 gap-6">
+              <div>
+                <div className="text-sm text-slate-400 mb-3">Nexus / People & ownership</div>
+                <h1 className="text-[28px] leading-tight font-semibold text-slate-900 tracking-tight">
+                  People & ownership
+                </h1>
+                <p className="text-[15px] text-slate-500 mt-1.5">
+                  Team members, roles, and product responsibilities.
+                </p>
               </div>
-              <h1 className="text-[36px] leading-none tracking-[-1.5px] font-semibold text-[#0B1E3A]">
-                People & ownership
-              </h1>
-              <p className="text-[11px] text-[#7A8FA4] mt-5">
-                The human index behind every product record — role, department, and responsibility type.
-              </p>
+
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center gap-2 bg-[#2451B0] hover:bg-[#1D4291] text-white font-medium px-4 py-2.5 rounded-md transition-colors text-[14px] shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2451B0]"
+              >
+                <UserPlus size={16} strokeWidth={2} />
+                Add member
+              </button>
             </div>
 
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 border border-gray-300 text-gray-700 text-[13px] font-medium px-4 h-[39px] rounded-md hover:bg-gray-50 transition-colors"
-            >
-              <UserPlus size={16} strokeWidth={1.8} />
-              Add member
-            </button>
-          </div>
-
-          <div className="border-t border-[#D3D3CF] mt-6 mb-6" />
-
-          <div className="relative mb-6 max-w-md">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name, department, or product"
-              className="w-full border border-gray-300 bg-white rounded-lg pl-9 pr-3 py-2 text-[12px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3F84E5]/30 focus:border-[#3F84E5]"
-            />
-          </div>
-
-          {error && <div className="text-[11px] text-red-600 mb-4">{error}</div>}
-
-          <div className="bg-[#FAFAF8] border border-[#D2D5D3]">
-            <div className="grid grid-cols-[1fr_1fr_1fr_140px_100px] px-[18px] py-2.5 border-b border-[#D8D9D7] text-[9px] uppercase tracking-[0.1em] font-mono text-[#698097]">
-              <span>Employee</span>
-              <span>Role / Department</span>
-              <span>Responsible products</span>
-              <span>Responsibility type</span>
-              <span>Status</span>
+            {/* Search */}
+            <div className="mb-6">
+              <div className="relative max-w-md">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name, department, or product"
+                  className={`${inputClass} pl-10`}
+                />
+              </div>
             </div>
 
-            {loading && <div className="px-[18px] py-8 text-[11px] text-[#8A99A7]">Loading team…</div>}
-            {!loading && members.length === 0 && (
-              <div className="px-[18px] py-8 text-[11px] text-[#8A99A7]">No team members recorded yet.</div>
+            {/* Error State */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-[14px] text-red-800">{error}</p>
+              </div>
             )}
 
-            {!loading &&
-              members.map((m) => (
-                <div key={m.id} className="grid grid-cols-[1fr_1fr_1fr_140px_100px] items-center min-h-[70px] px-[18px] border-b border-[#E0E1DE] last:border-b-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#0B1E3A] text-white flex items-center justify-center text-[11px] font-semibold shrink-0">
-                      {m.fullName.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
-                    </div>
-                    <span className="text-[12px] font-medium text-[#0B1E3A]">{m.fullName}</span>
-                  </div>
+            {/* Table */}
+            <div className="rounded-lg border border-slate-200 overflow-hidden">
+              {/* Table Header */}
+              <div className="grid grid-cols-5 gap-4 px-5 py-3 bg-slate-50 border-b border-slate-200">
+                <div className="text-[12px] font-medium text-slate-500">Employee</div>
+                <div className="text-[12px] font-medium text-slate-500">Role</div>
+                <div className="text-[12px] font-medium text-slate-500">Responsible products</div>
+                <div className="text-[12px] font-medium text-slate-500">Responsibility</div>
+                <div className="text-[12px] font-medium text-slate-500">Status</div>
+              </div>
 
-                  <div>
-                    <div className="text-[11px] text-[#0B1E3A]">{m.jobTitle ?? "—"}</div>
-                    <div className="text-[9px] text-[#8A99A7]">{m.department ?? ""}</div>
-                  </div>
-
-                  <div className="text-[11px] text-[#8A99A7]">{m.responsibleProducts}</div>
-                  <div className="text-[11px] text-[#4A5A6A]">{m.responsibilityType ?? "—"}</div>
-                  <div>
-                    <StatusBadge status={m.status} />
-                  </div>
+              {loading && (
+                <div className="px-6 py-16 text-center">
+                  <p className="text-[14px] text-slate-400">Loading team members…</p>
                 </div>
-              ))}
+              )}
+
+              {!loading && members.length === 0 && (
+                <div className="px-6 py-16 text-center">
+                  <p className="text-[14px] text-slate-500">No team members recorded yet.</p>
+                  <p className="text-[13px] text-slate-400 mt-1">
+                    Add one with the button above.
+                  </p>
+                </div>
+              )}
+
+              <div className="divide-y divide-slate-200">
+                {!loading &&
+                  members.map((m) => (
+                    <div
+                      key={m.id}
+                      className="grid grid-cols-5 gap-4 px-5 py-4 hover:bg-slate-50 transition-colors items-center"
+                    >
+                      {/* Employee */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-[#2451B0] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
+                          {initials(m.fullName)}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[14px] font-medium text-slate-900 truncate">
+                            {m.fullName}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Role & Department */}
+                      <div className="min-w-0">
+                        <div className="text-[14px] text-slate-900 truncate">{m.jobTitle ?? "—"}</div>
+                        {m.department && (
+                          <div className="text-[12px] text-slate-500 mt-0.5 truncate">
+                            {m.department}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Responsible Products */}
+                      <div className="min-w-0">
+                        <p className="text-[14px] text-slate-600 truncate">{m.responsibleProducts}</p>
+                      </div>
+
+                      {/* Responsibility Type */}
+                      <div className="min-w-0">
+                        <p className="text-[14px] text-slate-600 truncate">
+                          {m.responsibilityType ?? "—"}
+                        </p>
+                      </div>
+
+                      {/* Status */}
+                      <div>
+                        <StatusBadge status={m.status} />
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Results Count */}
+            {!loading && members.length > 0 && (
+              <div className="mt-4 text-[13px] text-slate-400">
+                Showing {members.length} team member{members.length === 1 ? "" : "s"}
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -187,6 +260,14 @@ function AddMemberModal({ onClose, onSaved }: { onClose: () => void; onSaved: ()
   const [status, setStatus] = useState(STATUS_OPTIONS[0]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -218,45 +299,124 @@ function AddMemberModal({ onClose, onSaved }: { onClose: () => void; onSaved: ()
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+    <div
+      role="presentation"
+      className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 px-4"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-member-title"
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-900">Add member</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h2 id="add-member-title" className="text-[17px] font-semibold text-slate-900">
+            Add team member
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 transition-colors rounded-md p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2451B0]"
+          >
             <X size={18} />
           </button>
         </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">FULL NAME</label>
-            <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label className="block text-[13px] font-medium text-slate-700 mb-1.5">
+              Full name *
+            </label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="John Doe"
+              className={inputClass}
+              required
+            />
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">JOB TITLE</label>
-            <input value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label className="block text-[13px] font-medium text-slate-700 mb-1.5">
+              Job title
+            </label>
+            <input
+              type="text"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              placeholder="e.g. Product Manager"
+              className={inputClass}
+            />
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">DEPARTMENT</label>
-            <input value={department} onChange={(e) => setDepartment(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label className="block text-[13px] font-medium text-slate-700 mb-1.5">
+              Department
+            </label>
+            <input
+              type="text"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              placeholder="e.g. Engineering"
+              className={inputClass}
+            />
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">EMAIL</label>
-            <input value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label className="block text-[13px] font-medium text-slate-700 mb-1.5">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="john@example.com"
+              className={inputClass}
+            />
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">STATUS</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <label className="block text-[13px] font-medium text-slate-700 mb-1.5">
+              Status
+            </label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className={`${inputClass} appearance-none`}
+            >
               {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
+                <option key={s} value={s} className="text-slate-900">
                   {s}
                 </option>
               ))}
             </select>
           </div>
-          {error && <div className="text-xs text-red-600">{error}</div>}
-          <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
-            {submitting ? "Adding..." : "Add member"}
-          </button>
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
+              <AlertCircle size={14} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-[13px] text-red-800">{error}</p>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-md text-[14px] font-medium hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2451B0]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 px-4 py-2.5 bg-[#2451B0] hover:bg-[#1D4291] disabled:opacity-60 text-white rounded-md text-[14px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2451B0]"
+            >
+              {submitting ? "Adding…" : "Add member"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

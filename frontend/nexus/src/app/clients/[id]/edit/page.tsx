@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Sidebar from "../../../layout/Sidebar";
 import Topbar from "../../../layout/Topbar";
+import { ChevronLeft, AlertCircle, CheckCircle2 } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const STATUS_OPTIONS = ["Active", "Onboarding", "Inactive"];
@@ -26,6 +27,7 @@ export default function EditClientPage() {
   const [registeredOffice, setRegisteredOffice] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -65,6 +67,7 @@ export default function EditClientPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     const token = localStorage.getItem("nexus_token");
     setSubmitting(true);
@@ -93,7 +96,10 @@ export default function EditClientPage() {
         return;
       }
 
-      router.push(`/clients/${clientId}`);
+      setSuccess("Client updated successfully!");
+      setTimeout(() => {
+        router.push(`/clients/${clientId}`);
+      }, 1000);
     } catch {
       setError("Could not reach the server.");
     } finally {
@@ -102,17 +108,17 @@ export default function EditClientPage() {
   }
 
   const inputClass =
-    "w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#3F84E5]/30 focus:border-[#3F84E5]";
-  const labelClass = "text-[10px] uppercase tracking-wide text-[#7A8FA4] font-mono mb-1.5 block";
+    "w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all";
+  const labelClass = "text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2 block";
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-[#F4F0E8]">
+      <div className="flex min-h-screen bg-white">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar />
-          <main className="flex-1 px-7.5 pt-7.5">
-            <p className="text-[11px] text-[#7A8FA4]">Loading client…</p>
+          <main className="flex-1 px-12 py-8">
+            <p className="text-sm text-gray-500">Loading client…</p>
           </main>
         </div>
       </div>
@@ -120,99 +126,267 @@ export default function EditClientPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F4F0E8]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-7.5 pt-7.5 pb-10">
-          <button onClick={() => router.push(`/clients/${clientId}`)} className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A] mb-3">
-            ← {companyName.toUpperCase()}
+        <main className="flex-1 px-12 py-8 overflow-auto">
+          
+          {/* Back Button */}
+          <button
+            onClick={() => router.push(`/clients/${clientId}`)}
+            className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold mb-6 transition-colors"
+          >
+            <ChevronLeft size={16} />
+            Back to Client
           </button>
 
-          <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">System register</div>
-          <h1 className="text-[32px] leading-none tracking-[-1.2px] font-semibold text-[#0B1E3A]">Edit client</h1>
-          <p className="text-[11px] text-[#7A8FA4] mt-3">Revise the record for {recordCode}.</p>
-
-          <div className="border-t border-[#D3D3CF] mt-6 mb-6" />
-
-          <form onSubmit={handleSubmit} className="max-w-2xl bg-[#FAFAF8] border border-[#D2D5D3] p-6 space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-start justify-between mb-4">
               <div>
-                <label className={labelClass}>COMPANY NAME</label>
-                <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} />
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Client</h1>
+                <p className="text-gray-600 text-sm">
+                  Update the details for <span className="font-semibold">{recordCode}</span>
+                </p>
               </div>
-              <div>
-                <label className={labelClass}>CLIENT RECORD ID</label>
-                <input value={recordCode} disabled className={`${inputClass} bg-gray-100 text-gray-400`} />
+              
+              <button
+                type="button"
+                onClick={() => router.push(`/clients/${clientId}`)}
+                className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          {/* Form Section */}
+          <div className="grid grid-cols-3 gap-8">
+            
+            {/* Main Form */}
+            <form onSubmit={handleSubmit} className="col-span-2">
+              <div className="bg-white border border-gray-300 rounded-lg p-8 space-y-6">
+                
+                {/* Error Alert */}
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                    <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-800">{error}</p>
+                  </div>
+                )}
+
+                {/* Success Alert */}
+                {success && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+                    <CheckCircle2 size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-green-800">{success}</p>
+                  </div>
+                )}
+
+                {/* Company Information */}
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Company Information</h2>
+                  
+                  <div className="grid grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelClass}>Company Name *</label>
+                      <input
+                        type="text"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        className={inputClass}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Client Record ID</label>
+                      <input
+                        type="text"
+                        value={recordCode}
+                        disabled
+                        className={`${inputClass} bg-gray-50 text-gray-500 cursor-not-allowed`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location & Industry */}
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Location & Industry</h2>
+                  
+                  <div className="grid grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelClass}>Country</label>
+                      <input
+                        type="text"
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Industry</label>
+                      <input
+                        type="text"
+                        value={industry}
+                        onChange={(e) => setIndustry(e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-5">
+                    <label className={labelClass}>Registered Office</label>
+                    <input
+                      type="text"
+                      value={registeredOffice}
+                      onChange={(e) => setRegisteredOffice(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Primary Contact</h2>
+                  
+                  <div className="grid grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelClass}>Contact Name</label>
+                      <input
+                        type="text"
+                        value={primaryContactName}
+                        onChange={(e) => setPrimaryContactName(e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Contact Email</label>
+                      <input
+                        type="email"
+                        value={primaryContactEmail}
+                        onChange={(e) => setPrimaryContactEmail(e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Management */}
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Account Management</h2>
+                  
+                  <div className="grid grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelClass}>Support Phone</label>
+                      <input
+                        type="tel"
+                        value={supportPhone}
+                        onChange={(e) => setSupportPhone(e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Account Owner</label>
+                      <input
+                        type="text"
+                        value={accountOwner}
+                        onChange={(e) => setAccountOwner(e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status & Notes */}
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Status & Notes</h2>
+                  
+                  <div className="mb-5">
+                    <label className={labelClass}>Client Status</label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className={inputClass}
+                    >
+                      {STATUS_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Additional Notes</label>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      rows={4}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex gap-4 pt-4 border-t border-gray-200">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors duration-200"
+                  >
+                    {submitting ? "Saving..." : "Save Changes"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/clients/${clientId}`)}
+                    className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            {/* Sidebar Guidance */}
+            <div className="col-span-1">
+              <div className="sticky top-8 space-y-4">
+                
+                {/* Editing Guide */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
+                  <h3 className="text-sm font-bold text-blue-900 mb-3">Editing Guidelines</h3>
+                  <ul className="space-y-2.5 text-xs text-blue-800">
+                    <li className="flex gap-2">
+                      <span className="text-blue-600 font-bold mt-0.5">•</span>
+                      <span>Keep company name consistent with legal documents</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-blue-600 font-bold mt-0.5">•</span>
+                      <span>Update contact information when personnel changes</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-blue-600 font-bold mt-0.5">•</span>
+                      <span>Status changes are tracked in activity logs</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-blue-600 font-bold mt-0.5">•</span>
+                      <span>Account owner manages relationship internally</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Info Card */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="text-xs text-amber-900 font-medium">
+                    💡 <span className="block mt-1">All changes to this client record are saved automatically in the change history.</span>
+                  </p>
+                </div>
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>COUNTRY</label>
-                <input value={country} onChange={(e) => setCountry(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>STATUS</label>
-                <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputClass}>
-                  {STATUS_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className={labelClass}>INDUSTRY</label>
-              <input value={industry} onChange={(e) => setIndustry(e.target.value)} className={inputClass} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>PRIMARY CONTACT NAME</label>
-                <input value={primaryContactName} onChange={(e) => setPrimaryContactName(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>PRIMARY CONTACT EMAIL</label>
-                <input value={primaryContactEmail} onChange={(e) => setPrimaryContactEmail(e.target.value)} className={inputClass} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>SUPPORT PHONE</label>
-                <input value={supportPhone} onChange={(e) => setSupportPhone(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>ACCOUNT OWNER</label>
-                <input value={accountOwner} onChange={(e) => setAccountOwner(e.target.value)} className={inputClass} />
-              </div>
-            </div>
-
-            <div>
-              <label className={labelClass}>REGISTERED OFFICE</label>
-              <input value={registeredOffice} onChange={(e) => setRegisteredOffice(e.target.value)} className={inputClass} />
-            </div>
-
-            <div>
-              <label className={labelClass}>NOTES</label>
-              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} />
-            </div>
-
-            {error && <div className="text-xs text-red-600">{error}</div>}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-md px-5 py-2.5 transition-colors"
-            >
-              {submitting ? "Saving..." : "Save changes"}
-            </button>
-          </form>
+          </div>
         </main>
       </div>
     </div>

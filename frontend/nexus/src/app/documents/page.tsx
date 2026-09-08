@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, FileText, ExternalLink, X } from "lucide-react";
+import { Search, Plus, FileText, ExternalLink, X, AlertCircle, Trash2 } from "lucide-react";
 import Sidebar from "../layout/Sidebar";
 import Topbar from "../layout/Topbar";
 
@@ -28,6 +28,17 @@ function authHeaders() {
   return { Authorization: `Bearer ${token}` };
 }
 
+/** Only allow http(s) links through to `href` — blocks javascript: and data: URLs. */
+function safeHref(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ReferenceIndexPage() {
   const router = useRouter();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -35,6 +46,10 @@ export default function ReferenceIndexPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  // Guards against out-of-order responses when the user types quickly.
+  const requestIdRef = useRef(0);
 
   const loadDocuments = useCallback(async () => {
     const token = localStorage.getItem("nexus_token");
@@ -43,6 +58,7 @@ export default function ReferenceIndexPage() {
       return;
     }
 
+    const thisRequestId = ++requestIdRef.current;
     setLoading(true);
     setError("");
 
@@ -60,11 +76,20 @@ export default function ReferenceIndexPage() {
       }
 
       if (!res.ok) throw new Error();
-      setDocuments(await res.json());
+      const data = await res.json();
+
+      // Ignore this response if a newer request has since been kicked off.
+      if (thisRequestId === requestIdRef.current) {
+        setDocuments(data);
+      }
     } catch {
-      setError("Could not load references. Is the API running?");
+      if (thisRequestId === requestIdRef.current) {
+        setError("Could not load references. Is the API running?");
+      }
     } finally {
-      setLoading(false);
+      if (thisRequestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [search, router]);
 
@@ -73,85 +98,178 @@ export default function ReferenceIndexPage() {
     return () => clearTimeout(timeout);
   }, [loadDocuments]);
 
+  async function handleDelete(doc: DocumentItem) {
+    if (!window.confirm(`Remove "${doc.name}" from the reference index?`)) return;
+
+    setDeletingId(doc.id);
+    try {
+      const res = await fetch(`${API_URL}/api/documents/${doc.id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error();
+      setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
+    } catch {
+      setError("Could not delete that reference. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
-    <div className="flex min-h-screen bg-[#F4F0E8]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
-          <div className="flex items-end justify-between">
+        <main className="flex-1 px-12 py-8 overflow-auto">
+
+          {/* Header */}
+          <div className="flex items-start justify-between mb-8">
             <div>
-              <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">
-                System register
-              </div>
-              <h1 className="text-[36px] leading-none tracking-[-1.5px] font-semibold text-[#0B1E3A]">
-                Reference index
-              </h1>
-              <p className="text-[11px] text-[#7A8FA4] mt-5">
-                External documentation references attached to products. Nexus stores links and review ownership, never uploaded files.
-              </p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Reference Index</h1>
+              <p className="text-gray-600 text-sm">External documentation links and references for products</p>
             </div>
 
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 bg-[#0B1E3A] hover:bg-[#152C50] text-white text-[13px] font-medium px-4 h-[39px] transition-colors"
+              className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow-sm"
             >
-              <Plus size={16} strokeWidth={1.8} />
-              Add reference
+              <Plus size={18} strokeWidth={2} />
+              Add Reference
             </button>
           </div>
 
-          <div className="border-t border-[#D3D3CF] mt-6 mb-6" />
-
-          <div className="relative mb-6 max-w-md">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search document or product"
-              className="w-full border border-gray-300 bg-white rounded-lg pl-9 pr-3 py-2 text-[12px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3F84E5]/30 focus:border-[#3F84E5]"
-            />
+          {/* Search */}
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by document or product"
+                aria-label="Search references"
+                className="w-full border border-gray-300 rounded-lg pl-11 pr-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
+            </div>
           </div>
 
-          {error && <div className="text-[11px] text-red-600 mb-4">{error}</div>}
+          {/* Error Alert */}
+          {error && (
+            <div role="alert" className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
 
-          <div className="bg-[#FAFAF8] border border-[#D2D5D3]">
-            <div className="px-[18px] py-2.5 border-b border-[#D8D9D7] text-[9px] uppercase tracking-[0.1em] font-mono text-[#698097]">
-              External references / {documents.length} indexed
+          {/* Table */}
+          <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+
+            {/* Header */}
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                External References • <span className="font-bold text-gray-900">{documents.length}</span> indexed
+              </p>
             </div>
 
-            {loading && <div className="px-[18px] py-8 text-[11px] text-[#8A99A7]">Loading references…</div>}
-            {!loading && documents.length === 0 && (
-              <div className="px-[18px] py-8 text-[11px] text-[#8A99A7]">No references indexed yet.</div>
+            {/* Loading State */}
+            {loading && (
+              <div className="px-6 py-12 text-center">
+                <p className="text-sm text-gray-600">Loading references…</p>
+              </div>
             )}
 
-            {!loading &&
-              documents.map((d) => (
-                <div key={d.id} className="grid grid-cols-[1fr_140px_160px_120px_30px] items-center min-h-[72px] px-[18px] border-b border-[#E0E1DE] last:border-b-0">
-                  <div className="flex items-start gap-3">
-                    <FileText size={16} className="text-[#3F84E5] mt-1 shrink-0" />
-                    <div>
-                      <div className="text-[9px] text-[#8A99A7]">{d.productName}</div>
-                      <div className="text-[12px] font-medium text-[#0B1E3A]">{d.name}</div>
+            {/* Empty State */}
+            {!loading && documents.length === 0 && (
+              <div className="px-6 py-12 text-center">
+                <FileText size={32} className="text-gray-300 mx-auto mb-3" />
+                <p className="text-sm text-gray-600">
+                  {search ? `No references match "${search}".` : "No references indexed yet."}
+                </p>
+              </div>
+            )}
+
+            {/* Table Rows */}
+            <div className="divide-y divide-gray-200">
+              {!loading &&
+                documents.map((d) => {
+                  const link = safeHref(d.urlReference);
+                  return (
+                    <div
+                      key={d.id}
+                      className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors items-center"
+                    >
+                      {/* Document Info */}
+                      <div className="col-span-5 flex items-start gap-3">
+                        <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 flex-shrink-0 mt-0.5">
+                          <FileText size={18} strokeWidth={1.5} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">
+                            {d.productName}
+                          </div>
+                          <div className="text-sm font-semibold text-gray-900 mt-1 truncate">
+                            {d.name}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Type */}
+                      <div className="col-span-2">
+                        <span className="inline-block text-xs font-medium px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full">
+                          {d.documentType ?? "Reference"}
+                        </span>
+                      </div>
+
+                      {/* Owner */}
+                      <div className="col-span-2">
+                        <p className="text-sm text-gray-700">{d.ownerName}</p>
+                      </div>
+
+                      {/* Date */}
+                      <div className="col-span-1 text-right">
+                        <p className="text-xs text-gray-600">
+                          {d.lastUpdatedDate ? new Date(d.lastUpdatedDate).toLocaleDateString() : "—"}
+                        </p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="col-span-2 flex items-center justify-end gap-1">
+                        {link && (
+                          <a
+                            href={link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center justify-center p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                            title="Open reference"
+                            aria-label={`Open ${d.name} in a new tab`}
+                          >
+                            <ExternalLink size={16} />
+                          </a>
+                        )}
+                        <button
+                          onClick={() => handleDelete(d)}
+                          disabled={deletingId === d.id}
+                          className="inline-flex items-center justify-center p-2 text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors"
+                          title="Remove reference"
+                          aria-label={`Remove ${d.name}`}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="text-[11px] text-[#2874B6]">{d.documentType ?? "Reference"}</div>
-                  <div className="text-[11px] text-[#4A5A6A]">{d.ownerName}</div>
-                  <div className="text-[10px] text-[#8A99A7]">
-                    {d.lastUpdatedDate ? new Date(d.lastUpdatedDate).toLocaleDateString() : "—"}
-                  </div>
-
-                  {d.urlReference && (
-                    <a href={d.urlReference} target="_blank" rel="noreferrer" className="text-[#8A99A7] hover:text-[#0B1E3A]">
-                      <ExternalLink size={14} />
-                    </a>
-                  )}
-                </div>
-              ))}
+                  );
+                })}
+            </div>
           </div>
+
+          {/* Results Count */}
+          {!loading && documents.length > 0 && (
+            <div className="mt-6 text-xs text-gray-600">
+              Showing <span className="font-semibold text-gray-900">{documents.length}</span> reference{documents.length === 1 ? "" : "s"}
+            </div>
+          )}
         </main>
       </div>
 
@@ -170,36 +288,58 @@ export default function ReferenceIndexPage() {
 
 function AddReferenceModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [products, setProducts] = useState<ProductOption[]>([]);
+  const [productsError, setProductsError] = useState("");
   const [productId, setProductId] = useState("");
   const [name, setName] = useState("");
   const [documentType, setDocumentType] = useState("");
   const [urlReference, setUrlReference] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const firstFieldRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/products`, { headers: authHeaders() })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
       .then((data) => setProducts(data.map((p: any) => ({ id: p.id, name: p.name }))))
-      .catch(() => setProducts([]));
+      .catch(() => setProductsError("Could not load products. Try reopening this dialog."));
   }, []);
+
+  // Focus the first field and let Escape close the dialog, like a native modal.
+  useEffect(() => {
+    firstFieldRef.current?.focus();
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!productId || !name.trim()) {
+    const trimmedName = name.trim();
+    if (!productId || !trimmedName) {
       setError("Product and document name are required.");
       return;
     }
+    if (urlReference && !safeHref(urlReference)) {
+      setError("Please enter a valid http:// or https:// URL.");
+      return;
+    }
+
     setSubmitting(true);
+    setError("");
     try {
       const res = await fetch(`${API_URL}/api/documents`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           productId: Number(productId),
-          name,
-          documentType: documentType || null,
-          urlReference: urlReference || null,
+          name: trimmedName,
+          documentType: documentType.trim() || null,
+          urlReference: urlReference.trim() || null,
         }),
       });
       if (!res.ok) {
@@ -207,48 +347,131 @@ function AddReferenceModal({ onClose, onSaved }: { onClose: () => void; onSaved:
         return;
       }
       onSaved();
+    } catch {
+      setError("Failed to add reference. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      onClick={() => !submitting && onClose()}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-reference-title"
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-900">Add reference</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
+          <h2 id="add-reference-title" className="text-lg font-bold text-gray-900">Add Reference</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Close dialog"
+          >
+            <X size={20} />
           </button>
         </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">PRODUCT</label>
-            <select value={productId} onChange={(e) => setProductId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">Select...</option>
+            <label htmlFor="ref-product" className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Product *
+            </label>
+            <select
+              id="ref-product"
+              ref={firstFieldRef}
+              value={productId}
+              onChange={(e) => setProductId(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-gray-50"
+              disabled={submitting}
+              required
+            >
+              <option value="">Select a product…</option>
               {products.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
                 </option>
               ))}
             </select>
+            {productsError && <p className="text-xs text-red-700 mt-1.5">{productsError}</p>}
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">DOCUMENT NAME</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Atlas production runbook" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label htmlFor="ref-name" className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Document Name *
+            </label>
+            <input
+              id="ref-name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Production Runbook"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-gray-50"
+              disabled={submitting}
+              required
+            />
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">TYPE</label>
-            <input value={documentType} onChange={(e) => setDocumentType(e.target.value)} placeholder="Runbook, API reference..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label htmlFor="ref-type" className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Type
+            </label>
+            <input
+              id="ref-type"
+              type="text"
+              value={documentType}
+              onChange={(e) => setDocumentType(e.target.value)}
+              placeholder="e.g., Runbook, API Reference"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-gray-50"
+              disabled={submitting}
+            />
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">URL</label>
-            <input value={urlReference} onChange={(e) => setUrlReference(e.target.value)} placeholder="https://..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label htmlFor="ref-url" className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              URL
+            </label>
+            <input
+              id="ref-url"
+              type="url"
+              value={urlReference}
+              onChange={(e) => setUrlReference(e.target.value)}
+              placeholder="https://example.com/docs"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-gray-50"
+              disabled={submitting}
+            />
           </div>
-          {error && <div className="text-xs text-red-600">{error}</div>}
-          <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
-            {submitting ? "Adding..." : "Add reference"}
-          </button>
+
+          {error && (
+            <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <AlertCircle size={14} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-800">{error}</p>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={submitting}
+              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 disabled:opacity-60 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-sm font-semibold transition-colors"
+            >
+              {submitting ? "Adding..." : "Add Reference"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

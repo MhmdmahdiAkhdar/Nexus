@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Filter, Plus, Building2 } from "lucide-react";
+import { Search, Filter, Plus, Building2, ChevronRight, AlertCircle } from "lucide-react";
 import Sidebar from "../layout/Sidebar";
 import Topbar from "../layout/Topbar";
 
@@ -21,15 +21,17 @@ interface ClientListItem {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    Active: "border-[#6EAA99] text-[#267B67]",
-    Onboarding: "border-[#C2762E] text-[#A15F25]",
-    Inactive: "border-gray-300 text-gray-500",
+  const colors: Record<string, { bg: string; text: string; border: string }> = {
+    Active: { bg: "bg-green-100", text: "text-green-700", border: "border-green-300" },
+    Onboarding: { bg: "bg-amber-100", text: "text-amber-700", border: "border-amber-300" },
+    Inactive: { bg: "bg-gray-100", text: "text-gray-700", border: "border-gray-300" },
   };
 
+  const style = colors[status] || { bg: "bg-gray-100", text: "text-gray-700", border: "border-gray-300" };
+
   return (
-    <span className={`text-[9px] font-mono tracking-wide px-1.5 py-[3px] border ${styles[status] ?? "border-gray-300 text-gray-500"}`}>
-      {status.toUpperCase()}
+    <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full border ${style.bg} ${style.text} ${style.border}`}>
+      {status}
     </span>
   );
 }
@@ -100,118 +102,155 @@ export default function ClientsPage() {
   }, [search, statusFilter]);
 
   return (
-    <div className="flex min-h-screen bg-[#F4F0E8]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
-          <div className="flex items-end justify-between">
+        <main className="flex-1 px-12 py-8 overflow-auto">
+          
+          {/* Header */}
+          <div className="flex items-start justify-between mb-8">
             <div>
-              <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">
-                System register
-              </div>
-              <h1 className="text-[36px] leading-none tracking-[-1.5px] font-semibold text-[#0B1E3A]">
-                Client register
-              </h1>
-              <p className="text-[11px] text-[#7A8FA4] mt-5">
-                Companies connected to IDS Fintech products and the deployments accountable to each relationship.
-              </p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Client Register</h1>
+              <p className="text-gray-600 text-sm">Companies using IDS Fintech products and their deployments</p>
             </div>
 
             <Link
               href="/clients/new"
-              className="flex items-center gap-2 bg-[#0B1E3A] hover:bg-[#152C50] text-white text-[13px] font-medium px-4 h-[39px] transition-colors"
+              className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow-sm"
             >
-              <Plus size={16} strokeWidth={1.8} />
-              Add client
+              <Plus size={18} strokeWidth={2} />
+              Add Client
             </Link>
           </div>
 
-          <div className="border-t border-[#D3D3CF] mt-6 mb-6" />
-
-          <div className="flex items-center gap-3 mb-6">
-            <div className="relative flex-1">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search company, country, or contact"
-                className="w-full border border-gray-300 bg-white rounded-lg pl-9 pr-3 py-2 text-[12px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3F84E5]/30 focus:border-[#3F84E5]"
-              />
+          {/* Search & Filter */}
+          <div className="mb-6 flex gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
+              <div className="relative">
+                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by company, country, or contact"
+                  className="w-full border border-gray-300 rounded-lg pl-11 pr-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                />
+              </div>
             </div>
 
-            <div className="relative">
-              <Filter size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="appearance-none border border-gray-300 bg-white rounded-lg pl-8 pr-8 py-2 text-[12px] text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#3F84E5]/30 focus:border-[#3F84E5]"
-              >
-                <option value="">All status</option>
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+              <div className="relative">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="appearance-none border border-gray-300 bg-white rounded-lg pl-4 pr-10 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                >
+                  <option value="">All Status</option>
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+                <Filter size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
             </div>
           </div>
 
-          {error && <div className="text-[11px] text-red-600 mb-4">{error}</div>}
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
 
-          <div className="bg-[#FAFAF8] border border-[#D2D5D3]">
-            <div className="grid grid-cols-[1fr_140px_160px_120px_100px_20px] px-[18px] py-2.5 border-b border-[#D8D9D7] text-[9px] uppercase tracking-[0.1em] font-mono text-[#698097]">
-              <span>Company</span>
-              <span>Country</span>
-              <span>Primary contact</span>
-              <span>Deployments</span>
-              <span>Status</span>
-              <span></span>
+          {/* Table */}
+          <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+            
+            {/* Table Header */}
+            <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200">
+              <div className="col-span-4 text-xs font-semibold text-gray-700 uppercase tracking-wider">Company</div>
+              <div className="col-span-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">Country</div>
+              <div className="col-span-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">Contact</div>
+              <div className="col-span-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">Deployments</div>
+              <div className="col-span-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</div>
             </div>
 
-            {loading && <div className="px-[18px] py-8 text-[11px] text-[#8A99A7]">Loading clients…</div>}
-
-            {!loading && clients.length === 0 && (
-              <div className="px-[18px] py-8 text-[11px] text-[#8A99A7]">
-                No clients found{search || statusFilter ? " for this search/filter." : "."}
+            {/* Loading State */}
+            {loading && (
+              <div className="px-6 py-12 text-center">
+                <p className="text-sm text-gray-600">Loading clients…</p>
               </div>
             )}
 
-            {!loading &&
-              clients.map((client) => (
-                <Link
-                  key={client.id}
-                  href={`/clients/${client.id}`}
-                  className="grid grid-cols-[1fr_140px_160px_120px_100px_20px] items-center min-h-[70px] px-[18px] border-b border-[#E0E1DE] last:border-b-0 hover:bg-white transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-md border border-[#D2D5D3] bg-white flex items-center justify-center shrink-0">
-                      <Building2 size={15} className="text-[#3F84E5]" />
-                    </div>
-                    <div>
-                      <div className="text-[12px] font-medium text-[#0B1E3A]">{client.companyName}</div>
-                      <div className="text-[9px] font-mono text-[#8A99A7] mt-0.5">{client.recordCode}</div>
-                    </div>
-                  </div>
+            {/* Empty State */}
+            {!loading && clients.length === 0 && (
+              <div className="px-6 py-12 text-center">
+                <Building2 size={32} className="text-gray-300 mx-auto mb-3" />
+                <p className="text-sm text-gray-600">
+                  {search || statusFilter ? "No clients match your search" : "No clients yet"}
+                </p>
+              </div>
+            )}
 
-                  <div className="text-[11px] text-[#4A5A6A]">{client.country ?? "—"}</div>
-                  <div className="text-[11px] text-[#4A5A6A]">{client.primaryContactName ?? "—"}</div>
-                  <div className="text-[11px] text-[#4A5A6A]">{client.deploymentsLabel}</div>
-                  <div>
-                    <StatusBadge status={client.status} />
-                  </div>
-                  <div className="text-[#8A99A7] text-[12px]">›</div>
-                </Link>
-              ))}
+            {/* Table Rows */}
+            <div className="divide-y divide-gray-200">
+              {!loading &&
+                clients.map((client) => (
+                  <Link
+                    key={client.id}
+                    href={`/clients/${client.id}`}
+                    className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors items-center group"
+                  >
+                    {/* Company */}
+                    <div className="col-span-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 flex-shrink-0">
+                          <Building2 size={18} strokeWidth={1.5} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-gray-900 truncate">{client.companyName}</div>
+                          <div className="text-xs text-gray-600 mt-0.5 truncate">{client.recordCode}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Country */}
+                    <div className="col-span-2">
+                      <span className="text-sm text-gray-700">{client.country ?? "—"}</span>
+                    </div>
+
+                    {/* Contact */}
+                    <div className="col-span-2">
+                      <span className="text-sm text-gray-700">{client.primaryContactName ?? "—"}</span>
+                    </div>
+
+                    {/* Deployments */}
+                    <div className="col-span-2">
+                      <span className="text-sm text-gray-700">{client.deploymentsLabel}</span>
+                    </div>
+
+                    {/* Status */}
+                    <div className="col-span-2 flex items-center justify-between">
+                      <StatusBadge status={client.status} />
+                      <ChevronRight size={18} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
+                    </div>
+                  </Link>
+                ))}
+            </div>
           </div>
 
-          {!loading && (
-            <p className="text-[10px] text-[#8A99A7] mt-3">
-              {clients.length} of {clients.length} company records shown
-            </p>
+          {/* Footer Info */}
+          {!loading && clients.length > 0 && (
+            <div className="mt-6 text-xs text-gray-600">
+              Showing <span className="font-semibold text-gray-900">{clients.length}</span> client{clients.length === 1 ? "" : "s"}
+            </div>
           )}
         </main>
       </div>

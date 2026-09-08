@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Building2, MapPin, Mail, Phone, X, Trash2 } from "lucide-react";
+import { Building2, MapPin, Mail, Phone, X, Trash2, ChevronLeft, AlertCircle, Package } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
 
@@ -42,6 +42,21 @@ interface ProductOption {
 function authHeaders() {
   const token = localStorage.getItem("nexus_token");
   return { Authorization: `Bearer ${token}` };
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const colors: Record<string, { bg: string; text: string }> = {
+    Active: { bg: "bg-green-100", text: "text-green-700" },
+    Onboarding: { bg: "bg-amber-100", text: "text-amber-700" },
+    Inactive: { bg: "bg-gray-100", text: "text-gray-700" },
+  };
+
+  const style = colors[status] || { bg: "bg-gray-100", text: "text-gray-700" };
+  return (
+    <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${style.bg} ${style.text}`}>
+      {status}
+    </span>
+  );
 }
 
 export default function ClientDossierPage() {
@@ -102,12 +117,12 @@ export default function ClientDossierPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-[#F4F0E8]">
+      <div className="flex min-h-screen bg-white">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar />
-          <main className="flex-1 px-[30px] pt-[30px]">
-            <p className="text-[11px] text-[#7A8FA4]">Loading client…</p>
+          <main className="flex-1 px-12 py-8">
+            <p className="text-sm text-gray-500">Loading client…</p>
           </main>
         </div>
       </div>
@@ -116,12 +131,15 @@ export default function ClientDossierPage() {
 
   if (error || !detail) {
     return (
-      <div className="flex min-h-screen bg-[#F4F0E8]">
+      <div className="flex min-h-screen bg-white">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar />
-          <main className="flex-1 px-[30px] pt-[30px]">
-            <p className="text-[11px] text-red-600">{error || "Client not found."}</p>
+          <main className="flex-1 px-12 py-8">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{error || "Client not found."}</p>
+            </div>
           </main>
         </div>
       </div>
@@ -129,141 +147,193 @@ export default function ClientDossierPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F4F0E8]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
-        <main className="flex-1 px-[30px] pt-[30px] pb-10">
-          <button onClick={() => router.push("/clients")} className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A] mb-3">
-            ← CLIENT REGISTER
+        <main className="flex-1 px-12 py-8 overflow-auto">
+          
+          {/* Back Button */}
+          <button
+            onClick={() => router.push("/clients")}
+            className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold mb-6 transition-colors"
+          >
+            <ChevronLeft size={16} />
+            Back to Clients
           </button>
 
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-[9px] uppercase tracking-[0.18em] text-[#C2762E] font-mono mb-3">System register</div>
-              <h1 className="text-[32px] leading-none tracking-[-1.2px] font-semibold text-[#0B1E3A]">{detail.companyName}</h1>
-              <p className="text-[11px] text-[#7A8FA4] mt-2">
-                {detail.recordCode} · {detail.country ?? "—"}
-                {detail.industry ? ` · ${detail.industry}` : ""}
-              </p>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="border border-red-300 text-red-500 text-[13px] font-medium px-3 h-[39px] rounded-md hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors flex items-center gap-1.5"
-              >
-                <Trash2 size={14} /> Delete
-              </button>
-              <button
-                onClick={() => router.push(`/clients/${clientId}/edit`)}
-                className="border border-gray-300 text-gray-700 text-[13px] font-medium px-4 h-[39px] rounded-md hover:bg-gray-50 transition-colors"
-              >
-                Edit client
-              </button>
-            </div>
-          </div>
-
-          <div className="border-t border-[#D3D3CF] mt-6 mb-6" />
-
-          <div className="grid grid-cols-[1fr_1.3fr] gap-5">
-            <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-md border border-[#D2D5D3] bg-white flex items-center justify-center">
-                  <Building2 size={18} className="text-[#3F84E5]" />
-                </div>
-                <div>
-                  <span className="text-[9px] font-mono px-2 py-1 border border-[#6EAA99] text-[#267B67] inline-block mb-1">
-                    {detail.status.toUpperCase()}
-                  </span>
-                  <div className="text-[15px] font-semibold text-[#0B1E3A]">{detail.companyName}</div>
-                </div>
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">{detail.companyName}</h1>
+                <p className="text-gray-600 text-sm">
+                  {detail.recordCode} • {detail.country ?? "—"}
+                  {detail.industry ? ` • ${detail.industry}` : ""}
+                </p>
               </div>
 
-              <div className="space-y-3 pt-3 border-t border-[#E0E1DE]">
-                <div>
-                  <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">
-                    <MapPin size={11} /> Registered office
-                  </div>
-                  <div className="text-[11px] text-[#3A4A5A]">{detail.registeredOffice || "—"}</div>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">
-                    <Mail size={11} /> Primary contact
-                  </div>
-                  <div className="text-[11px] text-[#3A4A5A]">
-                    {detail.primaryContactName ?? "—"}
-                    {detail.primaryContactEmail ? ` · ${detail.primaryContactEmail}` : ""}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">
-                    <Phone size={11} /> Support line
-                  </div>
-                  <div className="text-[11px] text-[#3A4A5A]">{detail.supportPhone || "—"}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-3 mt-3 border-t border-[#E0E1DE]">
-                <div>
-                  <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Client since</div>
-                  <div className="text-[11px] text-[#3A4A5A]">{new Date(detail.createdAt).toLocaleDateString()}</div>
-                </div>
-                <div>
-                  <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Account owner</div>
-                  <div className="text-[11px] text-[#3A4A5A]">{detail.accountOwner || "—"}</div>
-                </div>
-              </div>
-
-              {detail.notes && (
-                <div className="pt-3 mt-3 border-t border-[#E0E1DE]">
-                  <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono mb-1">Notes</div>
-                  <div className="text-[11px] text-[#3A4A5A] whitespace-pre-wrap">{detail.notes}</div>
-                </div>
-              )}
-            </section>
-
-            <section className="bg-[#FAFAF8] border border-[#D2D5D3] p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <div className="text-[9px] uppercase tracking-wide text-[#8A99A7] font-mono">
-                    Deployment register / {String(detail.connectedProducts.length).padStart(2, "0")}
-                  </div>
-                  <h3 className="text-[14px] font-semibold text-[#0B1E3A] mt-1">Connected products</h3>
-                </div>
-                <button onClick={() => setShowAddDeployment(true)} className="text-[11px] text-[#2874B6] hover:text-[#0B1E3A]">
-                  + Add deployment
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 border border-red-300 text-red-700 hover:bg-red-50 rounded-lg font-semibold text-sm transition-colors"
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+                <button
+                  onClick={() => router.push(`/clients/${clientId}/edit`)}
+                  className="px-4 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-semibold text-sm transition-colors"
+                >
+                  Edit
                 </button>
               </div>
+            </div>
 
-              {detail.connectedProducts.length === 0 && (
-                <p className="text-[11px] text-[#8A99A7]">No deployments recorded for this client yet.</p>
-              )}
+            {/* Status Badge */}
+            <StatusBadge status={detail.status} />
+          </div>
 
-              <div className="space-y-1">
-                {detail.connectedProducts.map((p) => (
-                  <div
-                    key={p.deploymentId}
-                    className="flex items-center justify-between border-b border-[#E0E1DE] last:border-b-0 py-3"
-                  >
-                    <div>
-                      <div className="text-[12px] font-medium text-[#0B1E3A]">{p.productName}</div>
-                      <div className="text-[10px] text-[#8A99A7]">{p.environmentType ?? "Environment not set"}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[11px] text-[#4A5A6A]">{p.productVersion ? `v${p.productVersion}` : "—"}</div>
-                      <div className="text-[9px] font-mono text-[#8A99A7]">{p.recordCode}</div>
-                    </div>
+          {/* Content Grid */}
+          <div className="grid grid-cols-3 gap-8">
+            
+            {/* Left Column - Client Info */}
+            <div className="col-span-2 space-y-6">
+              
+              {/* Company Overview */}
+              <div className="bg-white border border-gray-300 rounded-lg p-6">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                    <Building2 size={24} strokeWidth={1.5} />
                   </div>
-                ))}
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">{detail.companyName}</h2>
+                    <p className="text-sm text-gray-600 mt-1">Client {detail.status}</p>
+                  </div>
+                </div>
+
+                {/* Info Grid */}
+                <div className="grid grid-cols-2 gap-6 pt-6 border-t border-gray-200">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin size={14} className="text-gray-400" />
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Registered Office</span>
+                    </div>
+                    <p className="text-sm text-gray-700">{detail.registeredOffice || "—"}</p>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Mail size={14} className="text-gray-400" />
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Primary Contact</span>
+                    </div>
+                    <p className="text-sm text-gray-700">{detail.primaryContactName ?? "—"}</p>
+                    {detail.primaryContactEmail && (
+                      <p className="text-sm text-gray-600 mt-1">{detail.primaryContactEmail}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Phone size={14} className="text-gray-400" />
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Support Line</span>
+                    </div>
+                    <p className="text-sm text-gray-700">{detail.supportPhone || "—"}</p>
+                  </div>
+
+                  <div>
+                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 block">Account Owner</span>
+                    <p className="text-sm text-gray-700">{detail.accountOwner || "—"}</p>
+                  </div>
+                </div>
+
+                {/* Timeline */}
+                <div className="pt-6 mt-6 border-t border-gray-200">
+                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 block">Client Since</span>
+                  <p className="text-sm text-gray-700">{new Date(detail.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
+                </div>
+
+                {/* Notes */}
+                {detail.notes && (
+                  <div className="pt-6 mt-6 border-t border-gray-200">
+                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 block">Notes</span>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{detail.notes}</p>
+                  </div>
+                )}
               </div>
-            </section>
+            </div>
+
+            {/* Right Column - Deployments */}
+            <div>
+              <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+                
+                {/* Header */}
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                  <div className="flex items-center justify-between mb-1">
+                    <h2 className="text-lg font-bold text-gray-900">Connected Products</h2>
+                    <span className="text-xs font-semibold bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full">
+                      {detail.connectedProducts.length}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-600">Deployments attached to this client</p>
+                </div>
+
+                {/* Content */}
+                {detail.connectedProducts.length === 0 && (
+                  <div className="px-6 py-12 text-center">
+                    <Package size={32} className="text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm text-gray-600 mb-4">No deployments yet</p>
+                    <button
+                      onClick={() => setShowAddDeployment(true)}
+                      className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
+                    >
+                      Add deployment →
+                    </button>
+                  </div>
+                )}
+
+                {detail.connectedProducts.length > 0 && (
+                  <>
+                    <div className="divide-y divide-gray-200">
+                      {detail.connectedProducts.map((p) => (
+                        <div key={p.deploymentId} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 flex-shrink-0">
+                              <Package size={16} strokeWidth={1.5} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-semibold text-gray-900 truncate">{p.productName}</div>
+                              <div className="text-xs text-gray-600 mt-0.5">
+                                {p.environmentType ?? "Environment not set"}
+                              </div>
+                              {p.productVersion && (
+                                <div className="text-xs text-gray-600 mt-1 font-mono">v{p.productVersion}</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                      <button
+                        onClick={() => setShowAddDeployment(true)}
+                        className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
+                      >
+                        + Add deployment
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </main>
       </div>
 
+      {/* Add Deployment Modal */}
       {showAddDeployment && (
         <AddDeploymentModal
           clientId={clientId}
@@ -275,27 +345,35 @@ export default function ClientDossierPage() {
         />
       )}
 
+      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
           onClick={() => setShowDeleteConfirm(false)}
         >
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Delete this client?</h2>
-            <p className="text-sm text-gray-500 mb-4">
-              This can't be undone. If deployments are still linked, the delete will be blocked.
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Delete Client?</h2>
+            <p className="text-sm text-gray-600 mb-6">
+              This action cannot be undone. If deployments are linked, deletion will be blocked.
             </p>
-            {deleteError && <div className="text-xs text-red-600 mb-4">{deleteError}</div>}
+            {deleteError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800">
+                {deleteError}
+              </div>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium py-2.5 hover:bg-gray-50"
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-semibold text-sm transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteClient}
-                className="flex-1 rounded-lg bg-red-500 text-white text-sm font-medium py-2.5 hover:bg-red-600"
+                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition-colors"
               >
                 Delete
               </button>
@@ -355,19 +433,30 @@ function AddDeploymentModal({ clientId, onClose, onSaved }: { clientId: string; 
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-900">Add deployment</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
+          <h2 className="text-lg font-bold text-gray-900">Add Deployment</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">PRODUCT</label>
-            <select value={productId} onChange={(e) => setProductId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">Select...</option>
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Product *
+            </label>
+            <select
+              value={productId}
+              onChange={(e) => setProductId(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              required
+            >
+              <option value="">Select a product…</option>
               {products.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -375,35 +464,85 @@ function AddDeploymentModal({ clientId, onClose, onSaved }: { clientId: string; 
               ))}
             </select>
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">PRODUCT VERSION</label>
-            <input value={productVersion} onChange={(e) => setProductVersion(e.target.value)} placeholder="1.0.0" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Product Version
+            </label>
+            <input
+              type="text"
+              value={productVersion}
+              onChange={(e) => setProductVersion(e.target.value)}
+              placeholder="e.g., 1.0.0"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">STATUS</label>
-              <select value={deploymentStatus} onChange={(e) => setDeploymentStatus(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                Status
+              </label>
+              <select
+                value={deploymentStatus}
+                onChange={(e) => setDeploymentStatus(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              >
                 <option>Pilot</option>
                 <option>In Progress</option>
                 <option>Live</option>
               </select>
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">SUPPORT TIER</label>
-              <select value={supportTier} onChange={(e) => setSupportTier(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                Support Tier
+              </label>
+              <select
+                value={supportTier}
+                onChange={(e) => setSupportTier(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              >
                 <option>Standard</option>
                 <option>Premium</option>
               </select>
             </div>
           </div>
+
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">GO-LIVE DATE</label>
-            <input type="date" value={goLiveDate} onChange={(e) => setGoLiveDate(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              Go-Live Date
+            </label>
+            <input
+              type="date"
+              value={goLiveDate}
+              onChange={(e) => setGoLiveDate(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
           </div>
-          {error && <div className="text-xs text-red-600">{error}</div>}
-          <button type="submit" disabled={submitting} className="w-full bg-[#0B1E3A] hover:bg-[#152C50] disabled:opacity-60 text-white text-sm font-semibold rounded-lg py-2.5">
-            {submitting ? "Adding..." : "Add deployment"}
-          </button>
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <AlertCircle size={14} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-800">{error}</p>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-sm font-semibold transition-colors"
+            >
+              {submitting ? "Adding..." : "Add Deployment"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
