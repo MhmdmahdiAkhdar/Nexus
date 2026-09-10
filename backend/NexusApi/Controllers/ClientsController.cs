@@ -40,6 +40,7 @@ public class ClientsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateClientRequest request)
     {
         var userId = CurrentUserId();
@@ -50,6 +51,7 @@ public class ClientsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateClientRequest request)
     {
         var userId = CurrentUserId();
@@ -62,6 +64,7 @@ public class ClientsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         try
@@ -77,6 +80,7 @@ public class ClientsController : ControllerBase
     }
 
     [HttpPost("{id:int}/deployments")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AddDeployment(int id, [FromBody] CreateClientDeploymentRequest request)
     {
         var userId = CurrentUserId();

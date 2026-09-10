@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Sidebar from "../../../layout/Sidebar";
 import Topbar from "../../../layout/Topbar";
 import { ChevronLeft, AlertCircle, CheckCircle2 } from "lucide-react";
+import {isAdmin} from "../../../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const STATUS_OPTIONS = ["Active", "Onboarding", "Inactive"];
@@ -34,6 +35,10 @@ export default function EditClientPage() {
     const token = localStorage.getItem("nexus_token");
     if (!token) {
       router.push("/login");
+      return;
+    }
+    if(!isAdmin()){
+      router.push(`/clients/${clientId}`);
       return;
     }
 

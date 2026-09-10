@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Sidebar from "../../../layout/Sidebar";
 import Topbar from "../../../layout/Topbar";
 import { ChevronLeft, AlertCircle, CheckCircle } from "lucide-react";
+import { isAdmin } from "../../../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const LIFECYCLE_OPTIONS = ["Active", "Beta", "Deprecated"];
@@ -35,6 +36,10 @@ export default function EditProductPage() {
     const token = localStorage.getItem("nexus_token");
     if (!token) {
       router.push("/login");
+      return;
+    }
+    if (!isAdmin()) {
+      router.push(`/products/${productId}`);
       return;
     }
 
@@ -139,7 +144,6 @@ export default function EditProductPage() {
 
         <main className="flex-1 px-12 py-8 overflow-auto">
           
-          {/* Back Button */}
           <button
             onClick={() => router.push(`/products/${productId}`)}
             className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold mb-6 transition-colors"
@@ -148,7 +152,6 @@ export default function EditProductPage() {
             Back to Product
           </button>
 
-          {/* Header */}
           <div className="mb-8">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -168,14 +171,12 @@ export default function EditProductPage() {
             </div>
           </div>
 
-          {/* Form Section */}
           <div className="grid grid-cols-3 gap-8">
             
-            {/* Main Form */}
             <form onSubmit={handleSubmit} className="col-span-2">
               <div className="bg-white border border-gray-300 rounded-lg p-8 space-y-6">
                 
-                {/* Error Alert */}
+              
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                     <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -349,7 +350,6 @@ export default function EditProductPage() {
                   </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="flex gap-4 pt-4 border-t border-gray-200">
                   <button
                     type="submit"
@@ -369,11 +369,9 @@ export default function EditProductPage() {
               </div>
             </form>
 
-            {/* Sidebar Info */}
             <div className="col-span-1">
               <div className="sticky top-8 space-y-4">
                 
-                {/* Edit Guide */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
                   <h3 className="text-sm font-bold text-blue-900 mb-3">Editing Guidelines</h3>
                   <ul className="space-y-2.5 text-xs text-blue-800">
@@ -396,7 +394,6 @@ export default function EditProductPage() {
                   </ul>
                 </div>
 
-                {/* History Info */}
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
                   <h3 className="text-sm font-bold text-gray-900 mb-2">Change History</h3>
                   <p className="text-xs text-gray-600">

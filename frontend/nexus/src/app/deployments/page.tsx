@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Search, Plus, Layers3, AlertCircle, ChevronRight } from "lucide-react";
 import Sidebar from "../layout/Sidebar";
 import Topbar from "../layout/Topbar";
+import { isAdmin } from "../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const ENVIRONMENT_OPTIONS = ["Development", "Test", "UAT", "Production"];
@@ -74,6 +75,7 @@ export default function DeploymentsPage() {
   const [version, setVersion] = useState("");
   const [environment, setEnvironment] = useState("");
   const [status, setStatus] = useState("");
+  const [admin, setAdmin] = useState(false);
 
   const loadDeployments = useCallback(async () => {
     const token = localStorage.getItem("nexus_token");
@@ -130,6 +132,7 @@ export default function DeploymentsPage() {
         return;
       }
     }
+    setAdmin(isAdmin());
 
     const headers = { Authorization: `Bearer ${token}` };
     fetch(`${API_URL}/api/deployments/options/clients`, { headers })
@@ -168,14 +171,15 @@ export default function DeploymentsPage() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Deployment Register</h1>
               <p className="text-gray-600 text-sm">Which version is running for which client, and where it stands</p>
             </div>
-
-            <Link
+            {admin && (
+              <Link
               href="/deployments/new"
               className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow-sm"
             >
               <Plus size={18} strokeWidth={2} />
               Create Deployment
             </Link>
+            )}
           </div>
 
           {/* Search + Filters */}

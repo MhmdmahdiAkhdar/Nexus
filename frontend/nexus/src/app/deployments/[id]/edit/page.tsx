@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { ChevronLeft, AlertCircle } from "lucide-react";
 import Sidebar from "../../../layout/Sidebar";
 import Topbar from "../../../layout/Topbar";
+import {isAdmin} from "../../../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const LIFECYCLE_OPTIONS = ["Pilot", "In Progress", "Live"];
@@ -32,6 +33,10 @@ export default function EditDeploymentPage() {
       router.push("/login");
       return;
     }
+    if(!isAdmin()){
+      router.push(`/deployments/${deploymentId}`);
+      return;
+    }
 
     async function load() {
       try {
@@ -55,7 +60,6 @@ export default function EditDeploymentPage() {
     load();
   }, [deploymentId, router]);
 
-  // Focus the first field once the form has data to show.
   useEffect(() => {
     if (!loading) firstFieldRef.current?.focus();
   }, [loading]);
@@ -124,16 +128,16 @@ export default function EditDeploymentPage() {
           <button
             onClick={() => router.push(`/deployments/${deploymentId}`)}
             className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-6 transition-colors"
-          >
+            >
             <ChevronLeft size={16} />
             {title}
           </button>
-
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Deployment</h1>
-            <p className="text-gray-600 text-sm">Update version, lifecycle status, and client notes for this deployment</p>
-          </div>
+      
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Deployment</h1>
+              <p className="text-gray-600 text-sm">Update version, lifecycle status, and client notes for this deployment</p>
+            </div>
+          
 
           <form onSubmit={handleSubmit} className="max-w-2xl bg-white border border-gray-300 rounded-lg p-6 space-y-5">
             <div className="grid grid-cols-2 gap-4">

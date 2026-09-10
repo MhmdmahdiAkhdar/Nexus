@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Search, Filter, Plus, Package, ChevronRight } from "lucide-react";
 import Sidebar from "../layout/Sidebar";
 import Topbar from "../layout/Topbar";
+import { isAdmin } from "../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -58,6 +59,7 @@ export default function ProductsPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [lifecycleFilter, setLifecycleFilter] = useState("");
+  const [admin, setAdmin] = useState(false);
 
   const loadProducts = useCallback(async () => {
     const token = localStorage.getItem("nexus_token");
@@ -112,6 +114,8 @@ export default function ProductsPage() {
       }
     }
 
+    setAdmin(isAdmin());
+
     const timeout = setTimeout(() => {
       loadProducts();
     }, 300);
@@ -136,13 +140,15 @@ export default function ProductsPage() {
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Register</h1>
                 <p className="text-gray-600 text-sm">Manage and track all software products in the IDS Fintech ecosystem</p>
               </div>
-              <Link
-                href="/products/new"
-                className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors duration-200 shadow-sm"
-              >
-                <Plus size={18} strokeWidth={2.5} />
-                Create Product
-              </Link>
+              {admin && (
+                <Link
+                  href="/products/new"
+                  className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors duration-200 shadow-sm"
+                >
+                  <Plus size={18} strokeWidth={2.5} />
+                  Create Product
+                </Link>
+              )}
             </div>
           </div>
 

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Search, Filter, Plus, Building2, ChevronRight, AlertCircle } from "lucide-react";
 import Sidebar from "../layout/Sidebar";
 import Topbar from "../layout/Topbar";
+import {isAdmin} from "../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const STATUS_OPTIONS = ["Active", "Onboarding", "Inactive"];
@@ -43,6 +44,7 @@ export default function ClientsPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [admin, setAdmin] = useState(false);
 
   const loadClients = useCallback(async () => {
     const token = localStorage.getItem("nexus_token");
@@ -95,6 +97,7 @@ export default function ClientsPage() {
         return;
       }
     }
+    setAdmin(isAdmin());
 
     const timeout = setTimeout(() => loadClients(), 300);
     return () => clearTimeout(timeout);
@@ -117,13 +120,16 @@ export default function ClientsPage() {
               <p className="text-gray-600 text-sm">Companies using IDS Fintech products and their deployments</p>
             </div>
 
-            <Link
+            {admin && (
+              <Link
               href="/clients/new"
               className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow-sm"
             >
               <Plus size={18} strokeWidth={2} />
               Add Client
             </Link>
+            )}            
+            
           </div>
 
           {/* Search & Filter */}

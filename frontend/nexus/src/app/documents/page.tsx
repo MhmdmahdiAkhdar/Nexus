@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search, Plus, FileText, ExternalLink, X, AlertCircle, Trash2 } from "lucide-react";
 import Sidebar from "../layout/Sidebar";
 import Topbar from "../layout/Topbar";
+import { isAdmin } from "../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -47,6 +48,8 @@ export default function ReferenceIndexPage() {
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [admin, setAdmin] = useState(false);
+
 
   // Guards against out-of-order responses when the user types quickly.
   const requestIdRef = useRef(0);
@@ -94,11 +97,15 @@ export default function ReferenceIndexPage() {
   }, [search, router]);
 
   useEffect(() => {
+    setAdmin(isAdmin());
     const timeout = setTimeout(() => loadDocuments(), 300);
     return () => clearTimeout(timeout);
   }, [loadDocuments]);
 
   async function handleDelete(doc: DocumentItem) {
+    // Defense-in-depth: even if this were somehow invoked, non-admins can't delete.
+    // (The real enforcement must also happen server-side in the DELETE endpoint.)
+    if (!admin) return;
     if (!window.confirm(`Remove "${doc.name}" from the reference index?`)) return;
 
     setDeletingId(doc.id);
@@ -132,13 +139,15 @@ export default function ReferenceIndexPage() {
               <p className="text-gray-600 text-sm">External documentation links and references for products</p>
             </div>
 
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow-sm"
-            >
-              <Plus size={18} strokeWidth={2} />
-              Add Reference
-            </button>
+            {admin && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow-sm"
+              >
+                <Plus size={18} strokeWidth={2} />
+                Add Reference
+              </button>
+            )}
           </div>
 
           {/* Search */}
@@ -248,15 +257,17 @@ export default function ReferenceIndexPage() {
                             <ExternalLink size={16} />
                           </a>
                         )}
-                        <button
-                          onClick={() => handleDelete(d)}
-                          disabled={deletingId === d.id}
-                          className="inline-flex items-center justify-center p-2 text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors"
-                          title="Remove reference"
-                          aria-label={`Remove ${d.name}`}
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {admin && (
+                          <button
+                            onClick={() => handleDelete(d)}
+                            disabled={deletingId === d.id}
+                            className="inline-flex items-center justify-center p-2 text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors"
+                            title="Remove reference"
+                            aria-label={`Remove ${d.name}`}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -273,7 +284,7 @@ export default function ReferenceIndexPage() {
         </main>
       </div>
 
-      {showAddModal && (
+      {admin && showAddModal && (
         <AddReferenceModal
           onClose={() => setShowAddModal(false)}
           onSaved={() => {

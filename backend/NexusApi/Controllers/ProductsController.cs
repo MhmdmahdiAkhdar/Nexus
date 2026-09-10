@@ -40,6 +40,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateProductRequest request)
     {
         var userId = CurrentUserId();
@@ -50,6 +51,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateProductRequest request)
     {
         var userId = CurrentUserId();
@@ -62,6 +64,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         try
@@ -77,6 +80,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost("{id:int}/modules")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateModule(int id, [FromBody] CreateModuleRequest request)
     {
         var userId = CurrentUserId();
@@ -87,6 +91,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{id:int}/modules/{moduleId:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateModule(int id, int moduleId, [FromBody] UpdateModuleRequest request)
     {
         var updated = await _productRepository.UpdateModuleAsync(id, moduleId, request);
@@ -95,6 +100,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id:int}/modules/{moduleId:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteModule(int id, int moduleId)
     {
         try
@@ -110,6 +116,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost("{id:int}/responsibilities")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AddResponsibility(int id, [FromBody] AddResponsibilityRequest request)
     {
         var userId = CurrentUserId();
@@ -120,6 +127,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id:int}/responsibilities/{responsibilityId:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RemoveResponsibility(int id, int responsibilityId)
     {
         await _productRepository.RemoveResponsibilityAsync(id, responsibilityId);
@@ -139,6 +147,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost("{id:int}/documents")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateDocument(int id, [FromBody] CreateDocumentRequest request)
     {
         var userId = CurrentUserId();
@@ -155,6 +164,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost("{id:int}/activity")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateActivity(int id, [FromBody] CreateActivityRequest request)
     {
         await _productRepository.CreateActivityAsync(id, request);
@@ -174,6 +184,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost("{id:int}/repositories")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateRepository(int id, [FromBody] CreateRepositoryRequest request)
     {
         var userId = CurrentUserId();
@@ -184,6 +195,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{id:int}/repositories/{repositoryId:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateRepository(int id, int repositoryId, [FromBody] UpdateRepositoryRequest request)
     {
         var updated = await _productRepository.UpdateRepositoryAsync(id, repositoryId, request);

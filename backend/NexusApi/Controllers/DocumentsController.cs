@@ -25,6 +25,7 @@ public class DocumentsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateGlobalDocumentRequest request)
     {
         var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

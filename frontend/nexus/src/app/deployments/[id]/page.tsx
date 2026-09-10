@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { ShieldCheck, ExternalLink, X, AlertCircle, ChevronLeft, Lock } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
+import {isAdmin} from "../../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -181,12 +182,14 @@ export default function DeploymentDossierPage() {
               </p>
             </div>
 
-            <button
+            { isAdmin() &&(
+              <button
               onClick={() => router.push(`/deployments/${deploymentId}/edit`)}
               className="border border-gray-300 text-gray-700 text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Edit Deployment
             </button>
+            )}
           </div>
 
           <div className="grid grid-cols-[1fr_320px] gap-6">
@@ -239,18 +242,20 @@ export default function DeploymentDossierPage() {
                 </div>
               </section>
 
-              {/* Environments */}
               <section className="bg-white border border-gray-300 rounded-lg overflow-hidden">
                 <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                   <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Environments • <span className="font-bold text-gray-900">{detail.environments.length}</span> configured
                   </p>
-                  <button
+                  {isAdmin() && (
+                    <button
                     onClick={() => setShowAddEnvironment(true)}
                     className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
                   >
                     + Add Environment
                   </button>
+                  )}
+                  
                 </div>
 
                 {detail.environments.length === 0 && (

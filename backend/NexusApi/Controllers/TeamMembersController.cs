@@ -31,6 +31,7 @@ public class TeamMembersController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateTeamMemberRequest request)
     {
         var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

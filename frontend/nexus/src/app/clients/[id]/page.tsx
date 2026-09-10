@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { Building2, MapPin, Mail, Phone, X, Trash2, ChevronLeft, AlertCircle, Package } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
+import { isAdmin } from "@/app/lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -81,6 +82,9 @@ export default function ClientDossierPage() {
     if (!token) {
       router.push("/login");
       return;
+    }
+    if (!isAdmin()){
+      router.push(`/clients/${clientId}`)
     }
 
     async function init() {
@@ -175,7 +179,8 @@ export default function ClientDossierPage() {
                 </p>
               </div>
 
-              <div className="flex gap-3">
+                {isAdmin() && (
+                <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
                   className="inline-flex items-center gap-2 px-4 py-2.5 border border-red-300 text-red-700 hover:bg-red-50 rounded-lg font-semibold text-sm transition-colors"
@@ -189,7 +194,9 @@ export default function ClientDossierPage() {
                 >
                   Edit
                 </button>
-              </div>
+              </div>    
+                )}
+              
             </div>
 
             {/* Status Badge */}
@@ -265,11 +272,9 @@ export default function ClientDossierPage() {
               </div>
             </div>
 
-            {/* Right Column - Deployments */}
             <div>
               <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
                 
-                {/* Header */}
                 <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
                   <div className="flex items-center justify-between mb-1">
                     <h2 className="text-lg font-bold text-gray-900">Connected Products</h2>
@@ -285,12 +290,15 @@ export default function ClientDossierPage() {
                   <div className="px-6 py-12 text-center">
                     <Package size={32} className="text-gray-300 mx-auto mb-3" />
                     <p className="text-sm text-gray-600 mb-4">No deployments yet</p>
+
+                    {isAdmin() &&(
                     <button
                       onClick={() => setShowAddDeployment(true)}
                       className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
                     >
                       Add deployment →
                     </button>
+                    )}
                   </div>
                 )}
 
@@ -317,7 +325,8 @@ export default function ClientDossierPage() {
                       ))}
                     </div>
 
-                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    {isAdmin() && (
+                      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                       <button
                         onClick={() => setShowAddDeployment(true)}
                         className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
@@ -325,6 +334,7 @@ export default function ClientDossierPage() {
                         + Add deployment
                       </button>
                     </div>
+                    )}
                   </>
                 )}
               </div>
@@ -333,8 +343,7 @@ export default function ClientDossierPage() {
         </main>
       </div>
 
-      {/* Add Deployment Modal */}
-      {showAddDeployment && (
+      {showAddDeployment && isAdmin() && (
         <AddDeploymentModal
           clientId={clientId}
           onClose={() => setShowAddDeployment(false)}
@@ -345,8 +354,7 @@ export default function ClientDossierPage() {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
+      {showDeleteConfirm && isAdmin() &&(
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
           onClick={() => setShowDeleteConfirm(false)}

@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { Users, Package, X, Trash2, Pencil, GitBranch, ChevronLeft, AlertCircle, FileText } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
+import { isAdmin } from "../../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -128,6 +129,7 @@ export default function ProductDossierPage() {
   const [detail, setDetail] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [admin, setAdmin] = useState(false);
 
   const [deployments, setDeployments] = useState<Deployment[] | null>(null);
   const [documents, setDocuments] = useState<DocumentItem[] | null>(null);
@@ -153,6 +155,8 @@ export default function ProductDossierPage() {
       router.push("/login");
       return;
     }
+
+    setAdmin(isAdmin());
 
     async function init() {
       setLoading(true);
@@ -250,7 +254,7 @@ export default function ProductDossierPage() {
   return (
     <div className="flex min-h-screen bg-white">
       <Sidebar />
-
+      
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
 
@@ -275,27 +279,29 @@ export default function ProductDossierPage() {
                 </p>
               </div>
               
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 border border-red-300 text-red-700 hover:bg-red-50 rounded-lg font-semibold text-sm transition-colors"
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </button>
-                <button
-                  onClick={() => router.push(`/products/${productId}/edit`)}
-                  className="px-4 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-semibold text-sm transition-colors"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => setShowLogUpdate(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors"
-                >
-                  Log Update
-                </button>
-              </div>
+              {admin && (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 border border-red-300 text-red-700 hover:bg-red-50 rounded-lg font-semibold text-sm transition-colors"
+                  >
+                    <Trash2 size={16} />
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => router.push(`/products/${productId}/edit`)}
+                    className="px-4 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-semibold text-sm transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setShowLogUpdate(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors"
+                  >
+                    Log Update
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Status Badges */}
@@ -386,12 +392,14 @@ export default function ProductDossierPage() {
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-gray-900">Modules</h2>
-                    <button
-                      onClick={() => setShowAddModule(true)}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
-                    >
-                      + Add Module
-                    </button>
+                    {admin && (
+                      <button
+                        onClick={() => setShowAddModule(true)}
+                        className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
+                      >
+                        + Add Module
+                      </button>
+                    )}
                   </div>
 
                   {detail.modules.length === 0 && (
@@ -410,18 +418,22 @@ export default function ProductDossierPage() {
                           <span className="inline-block text-xs font-semibold px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full">
                             {m.status}
                           </span>
-                          <button
-                            onClick={() => setEditingModule(m)}
-                            className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"
-                          >
-                            <Pencil size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteModule(m.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          {admin && (
+                            <>
+                              <button
+                                onClick={() => setEditingModule(m)}
+                                className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteModule(m.id)}
+                                className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -432,13 +444,15 @@ export default function ProductDossierPage() {
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-gray-900">Repositories</h2>
-                    <button
-                      onClick={() => setShowManageRepos(true)}
-                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold"
-                    >
-                      <GitBranch size={14} />
-                      Manage
-                    </button>
+                    {admin && (
+                      <button
+                        onClick={() => setShowManageRepos(true)}
+                        className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold"
+                      >
+                        <GitBranch size={14} />
+                        Manage
+                      </button>
+                    )}
                   </div>
                   <p className="text-sm text-gray-600">
                     Repository references and GitHub URLs are stored here for tracking purposes only.
@@ -453,13 +467,15 @@ export default function ProductDossierPage() {
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-gray-900">Responsibility</h2>
-                    <button
-                      onClick={() => setShowManageResp(true)}
-                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold"
-                    >
-                      <Users size={14} />
-                      Manage
-                    </button>
+                    {admin && (
+                      <button
+                        onClick={() => setShowManageResp(true)}
+                        className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold"
+                      >
+                        <Users size={14} />
+                        Manage
+                      </button>
+                    )}
                   </div>
 
                   {detail.responsiblePeople.length === 0 && (
@@ -543,14 +559,16 @@ export default function ProductDossierPage() {
 
           {tab === "Documents" && (
             <div>
-              <div className="flex justify-end mb-4">
-                <button
-                  onClick={() => setShowAddDocument(true)}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
-                >
-                  + Add Document
-                </button>
-              </div>
+              {admin && (
+                <div className="flex justify-end mb-4">
+                  <button
+                    onClick={() => setShowAddDocument(true)}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
+                  >
+                    + Add Document
+                  </button>
+                </div>
+              )}
 
               <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                 {documents === null && (

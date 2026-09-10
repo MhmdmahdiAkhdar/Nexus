@@ -29,8 +29,8 @@ public class AuthService : IAuthService
         if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             return null;
 
-        var (token, expiresAt) = GenerateToken(user.Id, user.Email, user.RoleId);
-        var roleName = await _userRepository.GetRoleNameByIdAsync(user.RoleId);
+        var roleName = await _userRepository.GetRoleNameByIdAsync(user.RoleId) ?? "Unknown";
+        var (token, expiresAt) = GenerateToken(user.Id, user.Email, roleName);
 
         return new LoginResponse
         {
@@ -40,7 +40,7 @@ public class AuthService : IAuthService
             Email = user.Email,
             FullName = user.FullName,
             RoleId = user.RoleId,
-            RoleName = roleName ?? "Unknown",
+            RoleName = roleName,
             MustChangePassword = user.MustChangePassword
         };
     }
@@ -63,7 +63,7 @@ public class AuthService : IAuthService
         return ChangePasswordResult.Ok();
     }
 
-    private (string Token, DateTime ExpiresAt) GenerateToken(int userId, string email, int roleId)
+    private (string Token, DateTime ExpiresAt) GenerateToken(int userId, string email, string roleName)
     {
         var expiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes);
 
@@ -71,7 +71,7 @@ public class AuthService : IAuthService
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Email, email),
-            new Claim(ClaimTypes.Role, roleId.ToString()),
+            new Claim(ClaimTypes.Role, roleName),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

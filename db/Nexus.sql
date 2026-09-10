@@ -15,7 +15,9 @@ CREATE TABLE `Permissions` (
 CREATE TABLE `RolePermissions` (
   `RoleId` INT,
   `PermissionId` INT,
-  PRIMARY KEY (`RoleId`, `PermissionId`)
+  PRIMARY KEY (`RoleId`, `PermissionId`),
+  FOREIGN KEY (`RoleId`) REFERENCES `Roles` (`Id`),
+  FOREIGN KEY (`PermissionId`) REFERENCES `Permissions` (`Id`)
 );
 
 CREATE TABLE `Users` (
@@ -25,8 +27,10 @@ CREATE TABLE `Users` (
   `FullName` VARCHAR(255),
   `RoleId` INT,
   `IsActive` BOOLEAN,
+  `MustChangePassword` BOOLEAN NOT NULL DEFAULT TRUE,
   `CreatedAt` DATETIME,
-  `UpdatedAt` DATETIME
+  `UpdatedAt` DATETIME,
+  FOREIGN KEY (`RoleId`) REFERENCES `Roles` (`Id`)
 );
 
 CREATE TABLE `Products` (
@@ -39,10 +43,14 @@ CREATE TABLE `Products` (
   `SupportedMarkets` VARCHAR(255),
   `Criticality` VARCHAR(255),
   `Technologies` VARCHAR(255),
+  `Notes` TEXT NULL,
+  `OwningTeam` VARCHAR(255) NULL,
   `CreatedBy` INT,
   `UpdatedBy` INT,
   `CreatedAt` DATETIME,
-  `UpdatedAt` DATETIME
+  `UpdatedAt` DATETIME,
+  FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`),
+  FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`)
 );
 
 CREATE TABLE `Modules` (
@@ -54,7 +62,10 @@ CREATE TABLE `Modules` (
   `CreatedBy` INT,
   `UpdatedBy` INT,
   `CreatedAt` DATETIME,
-  `UpdatedAt` DATETIME
+  `UpdatedAt` DATETIME,
+  FOREIGN KEY (`ProductId`) REFERENCES `Products` (`Id`),
+  FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`),
+  FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`)
 );
 
 CREATE TABLE `Repositories` (
@@ -63,8 +74,11 @@ CREATE TABLE `Repositories` (
   `Name` VARCHAR(255),
   `GitHubUrl` VARCHAR(255) UNIQUE,
   `MainBranch` VARCHAR(255),
+  `Description` TEXT NULL,
   `CreatedBy` INT,
-  `CreatedAt` DATETIME
+  `CreatedAt` DATETIME,
+  FOREIGN KEY (`ProductId`) REFERENCES `Products` (`Id`),
+  FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`)
 );
 
 CREATE TABLE `RepositoryUpdates` (
@@ -75,7 +89,9 @@ CREATE TABLE `RepositoryUpdates` (
   `CommitReference` VARCHAR(255),
   `UpdatedBy` INT,
   `UpdateDate` DATE,
-  `CreatedAt` DATETIME
+  `CreatedAt` DATETIME,
+  FOREIGN KEY (`RepositoryId`) REFERENCES `Repositories` (`Id`),
+  FOREIGN KEY (`UpdatedBy`) REFERENCES `TeamMembers` (`Id`)
 );
 
 CREATE TABLE `Documents` (
@@ -87,19 +103,31 @@ CREATE TABLE `Documents` (
   `LastUpdatedDate` DATE,
   `CreatedBy` INT,
   `UpdatedBy` INT,
-  `CreatedAt` DATETIME
+  `CreatedAt` DATETIME,
+  FOREIGN KEY (`ProductId`) REFERENCES `Products` (`Id`),
+  FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`),
+  FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`)
 );
 
 CREATE TABLE `Clients` (
   `Id` INT PRIMARY KEY AUTO_INCREMENT,
   `CompanyName` VARCHAR(255),
   `Country` VARCHAR(255),
+  `Industry` VARCHAR(255) NULL,
+  `PrimaryContactName` VARCHAR(255) NULL,
+  `PrimaryContactEmail` VARCHAR(255) NULL,
+  `SupportPhone` VARCHAR(255) NULL,
+  `RegisteredOffice` VARCHAR(255) NULL,
+  `AccountOwner` VARCHAR(255) NULL,
+  `Notes` TEXT NULL,
   `ContactInfo` VARCHAR(255),
   `Status` VARCHAR(255),
   `CreatedBy` INT,
   `UpdatedBy` INT,
   `CreatedAt` DATETIME,
-  `UpdatedAt` DATETIME
+  `UpdatedAt` DATETIME,
+  FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`),
+  FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`)
 );
 
 CREATE TABLE `Deployments` (
@@ -113,13 +141,19 @@ CREATE TABLE `Deployments` (
   `CreatedBy` INT,
   `UpdatedBy` INT,
   `CreatedAt` DATETIME,
-  `UpdatedAt` DATETIME
+  `UpdatedAt` DATETIME,
+  FOREIGN KEY (`ClientId`) REFERENCES `Clients` (`Id`),
+  FOREIGN KEY (`ProductId`) REFERENCES `Products` (`Id`),
+  FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`),
+  FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`)
 );
 
 CREATE TABLE `DeploymentModules` (
   `DeploymentId` INT,
   `ModuleId` INT,
-  PRIMARY KEY (`DeploymentId`, `ModuleId`)
+  PRIMARY KEY (`DeploymentId`, `ModuleId`),
+  FOREIGN KEY (`DeploymentId`) REFERENCES `Deployments` (`Id`),
+  FOREIGN KEY (`ModuleId`) REFERENCES `Modules` (`Id`)
 );
 
 CREATE TABLE `Environments` (
@@ -127,13 +161,21 @@ CREATE TABLE `Environments` (
   `DeploymentId` INT,
   `EnvironmentName` VARCHAR(255),
   `EnvironmentType` VARCHAR(255),
+  `Purpose` VARCHAR(255) NULL,
   `ServerName` VARCHAR(255),
+  `OperatingSystem` VARCHAR(255) NULL,
   `ApplicationUrl` VARCHAR(255),
+  `DatabaseInfo` VARCHAR(255) NULL,
+  `MonitoringLink` VARCHAR(255) NULL,
   `AccessReference` VARCHAR(255),
+  `Notes` TEXT NULL,
   `CreatedBy` INT,
   `UpdatedBy` INT,
   `CreatedAt` DATETIME,
-  `UpdatedAt` DATETIME
+  `UpdatedAt` DATETIME,
+  FOREIGN KEY (`DeploymentId`) REFERENCES `Deployments` (`Id`),
+  FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`),
+  FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`)
 );
 
 CREATE TABLE `TeamMembers` (
@@ -146,7 +188,9 @@ CREATE TABLE `TeamMembers` (
   `CreatedBy` INT,
   `UpdatedBy` INT,
   `CreatedAt` DATETIME,
-  `UpdatedAt` DATETIME
+  `UpdatedAt` DATETIME,
+  FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`),
+  FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`)
 );
 
 CREATE TABLE `ProductResponsibilities` (
@@ -156,60 +200,8 @@ CREATE TABLE `ProductResponsibilities` (
   `Responsibility` VARCHAR(255),
   `Description` VARCHAR(255),
   `CreatedBy` INT,
-  `CreatedAt` DATETIME
+  `CreatedAt` DATETIME,
+  FOREIGN KEY (`ProductId`) REFERENCES `Products` (`Id`),
+  FOREIGN KEY (`TeamMemberId`) REFERENCES `TeamMembers` (`Id`),
+  FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`)
 );
-
-ALTER TABLE `RolePermissions` ADD FOREIGN KEY (`RoleId`) REFERENCES `Roles` (`Id`);
-ALTER TABLE `RolePermissions` ADD FOREIGN KEY (`PermissionId`) REFERENCES `Permissions` (`Id`);
-ALTER TABLE `Users` ADD FOREIGN KEY (`RoleId`) REFERENCES `Roles` (`Id`);
-ALTER TABLE `Products` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `Products` ADD FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `Modules` ADD FOREIGN KEY (`ProductId`) REFERENCES `Products` (`Id`);
-ALTER TABLE `Modules` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `Modules` ADD FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `Repositories` ADD FOREIGN KEY (`ProductId`) REFERENCES `Products` (`Id`);
-ALTER TABLE `Repositories` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `RepositoryUpdates` ADD FOREIGN KEY (`RepositoryId`) REFERENCES `Repositories` (`Id`);
-ALTER TABLE `RepositoryUpdates` ADD FOREIGN KEY (`UpdatedBy`) REFERENCES `TeamMembers` (`Id`);
-ALTER TABLE `Documents` ADD FOREIGN KEY (`ProductId`) REFERENCES `Products` (`Id`);
-ALTER TABLE `Documents` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `Documents` ADD FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `Clients` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `Clients` ADD FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `Deployments` ADD FOREIGN KEY (`ClientId`) REFERENCES `Clients` (`Id`);
-ALTER TABLE `Deployments` ADD FOREIGN KEY (`ProductId`) REFERENCES `Products` (`Id`);
-ALTER TABLE `Deployments` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `Deployments` ADD FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `DeploymentModules` ADD FOREIGN KEY (`DeploymentId`) REFERENCES `Deployments` (`Id`);
-ALTER TABLE `DeploymentModules` ADD FOREIGN KEY (`ModuleId`) REFERENCES `Modules` (`Id`);
-ALTER TABLE `Environments` ADD FOREIGN KEY (`DeploymentId`) REFERENCES `Deployments` (`Id`);
-ALTER TABLE `Environments` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `Environments` ADD FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `TeamMembers` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `TeamMembers` ADD FOREIGN KEY (`UpdatedBy`) REFERENCES `Users` (`Id`);
-ALTER TABLE `ProductResponsibilities` ADD FOREIGN KEY (`ProductId`) REFERENCES `Products` (`Id`);
-ALTER TABLE `ProductResponsibilities` ADD FOREIGN KEY (`TeamMemberId`) REFERENCES `TeamMembers` (`Id`);
-ALTER TABLE `ProductResponsibilities` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `Users` (`Id`);
-
-ALTER TABLE `Users` ADD COLUMN `MustChangePassword` BOOLEAN NOT NULL DEFAULT TRUE;
-ALTER TABLE `Products` ADD COLUMN `OwningTeam` VARCHAR(255) NULL AFTER `Technologies`;
-
-ALTER TABLE `Clients`
-  ADD COLUMN `Industry` VARCHAR(255) NULL AFTER `Country`,
-  ADD COLUMN `PrimaryContactName` VARCHAR(255) NULL AFTER `Industry`,
-  ADD COLUMN `PrimaryContactEmail` VARCHAR(255) NULL AFTER `PrimaryContactName`,
-  ADD COLUMN `SupportPhone` VARCHAR(255) NULL AFTER `PrimaryContactEmail`,
-  ADD COLUMN `RegisteredOffice` VARCHAR(255) NULL AFTER `SupportPhone`,
-  ADD COLUMN `AccountOwner` VARCHAR(255) NULL AFTER `RegisteredOffice`; 
-
-  ALTER TABLE `Products` ADD COLUMN `Notes` TEXT NULL AFTER `Technologies`;
-ALTER TABLE `Clients` ADD COLUMN `Notes` TEXT NULL AFTER `AccountOwner`;
-
-ALTER TABLE `Environments`
-  ADD COLUMN `Purpose` VARCHAR(255) NULL AFTER `EnvironmentType`,
-  ADD COLUMN `OperatingSystem` VARCHAR(255) NULL AFTER `ServerName`,
-  ADD COLUMN `DatabaseInfo` VARCHAR(255) NULL AFTER `ApplicationUrl`,
-  ADD COLUMN `MonitoringLink` VARCHAR(255) NULL AFTER `DatabaseInfo`,
-  ADD COLUMN `Notes` TEXT NULL AFTER `AccessReference`;
-
-ALTER TABLE `Repositories` ADD COLUMN `Description` TEXT NULL AFTER `MainBranch`;

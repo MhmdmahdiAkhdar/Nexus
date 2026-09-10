@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
 import { ChevronLeft, AlertCircle, CheckCircle2 } from "lucide-react";
+import { isAdmin } from "../../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const STATUS_OPTIONS = ["Active", "Onboarding", "Inactive"];
@@ -24,6 +25,22 @@ export default function NewClientPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Gate: only admins may access this page at all.
+  const [checkingAccess, setCheckingAccess] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("nexus_token");
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
+    if (!isAdmin()) {
+      router.replace("/clients");
+      return;
+    }
+    setCheckingAccess(false);
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -78,6 +95,21 @@ export default function NewClientPage() {
   const inputClass =
     "w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all";
   const labelClass = "text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2 block";
+
+  // While we verify the user is an admin, render nothing (avoids a flash of the form).
+  if (checkingAccess) {
+    return (
+      <div className="flex min-h-screen bg-white">
+        <Sidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <Topbar />
+          <main className="flex-1 px-12 py-8 overflow-auto">
+            <p className="text-sm text-gray-500">Checking access…</p>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-white">

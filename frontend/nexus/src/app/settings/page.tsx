@@ -5,14 +5,16 @@ import { useRouter } from "next/navigation";
 import { KeyRound, LogOut, Shield, ChevronRight } from "lucide-react";
 import Sidebar from "../layout/Sidebar";
 import Topbar from "../layout/Topbar";
+import { isAdmin } from "../lib/auth";
 
-const SETTINGS_ITEMS = [
+const ACCOUNT_ITEMS = [
   {
     key: "password",
     label: "Change password",
     description: "Update the password you use to sign in",
     icon: KeyRound,
     path: "/change-password",
+    adminOnly: false,
   },
   {
     key: "access",
@@ -20,18 +22,22 @@ const SETTINGS_ITEMS = [
     description: "Manage who can view and edit this workspace",
     icon: Shield,
     path: "/access-control",
+    adminOnly: true,
   },
 ];
 
 export default function SettingsPage() {
   const router = useRouter();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [admin, setAdmin] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("nexus_token");
     if (!token) {
       router.push("/login");
+      return;
     }
+    setAdmin(isAdmin());
   }, [router]);
 
   function confirmLogout() {
@@ -39,6 +45,8 @@ export default function SettingsPage() {
     localStorage.removeItem("nexus_user");
     window.location.href = "/login";
   }
+
+  const visibleItems = ACCOUNT_ITEMS.filter((item) => !item.adminOnly || admin);
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -61,7 +69,7 @@ export default function SettingsPage() {
             <div>
               <h2 className="text-xs font-medium text-gray-400 mb-3 px-1">Account</h2>
               <div className="rounded-xl border border-gray-200 divide-y divide-gray-200 overflow-hidden">
-                {SETTINGS_ITEMS.map(({ key, label, description, icon: Icon, path }) => (
+                {visibleItems.map(({ key, label, description, icon: Icon, path }) => (
                   <button
                     key={key}
                     onClick={() => router.push(path)}

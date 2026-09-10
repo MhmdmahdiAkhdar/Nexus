@@ -45,6 +45,7 @@ public class DeploymentsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateDeploymentRequest request)
     {
         var userId = CurrentUserId();
@@ -55,6 +56,7 @@ public class DeploymentsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateDeploymentRequest request)
     {
         var userId = CurrentUserId();
@@ -67,6 +69,7 @@ public class DeploymentsController : ControllerBase
     }
 
     [HttpPost("{id:int}/environments")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AddEnvironment(int id, [FromBody] CreateEnvironmentRequest request)
     {
         var userId = CurrentUserId();

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
 import { ChevronLeft, AlertCircle, CheckCircle } from "lucide-react";
+import { isAdmin } from "../../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const LIFECYCLE_OPTIONS = ["Active", "Beta", "Deprecated"];
@@ -25,6 +26,17 @@ export default function NewProductPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("nexus_token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+    if (!isAdmin()) {
+      router.push("/products");
+    }
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

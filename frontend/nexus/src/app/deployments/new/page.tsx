@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, AlertCircle } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
 import Topbar from "../../layout/Topbar";
+import {isAdmin} from "../../lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const LIFECYCLE_OPTIONS = ["Pilot", "In Progress", "Live"];
@@ -37,6 +38,9 @@ export default function NewDeploymentPage() {
     if (!token) {
       router.push("/login");
       return;
+    }
+    if(!isAdmin()){
+      router.push("/deployments");
     }
 
     const headers = { Authorization: `Bearer ${token}` };
