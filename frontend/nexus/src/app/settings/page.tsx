@@ -57,7 +57,7 @@ export default function SettingsPage() {
 
         <main className="flex-1 px-8 py-12">
           <div className="max-w-xl mx-auto">
-            {/* Header */}
+            
             <div className="mb-10">
               <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
               <p className="text-sm text-gray-500 mt-1">
@@ -65,7 +65,7 @@ export default function SettingsPage() {
               </p>
             </div>
 
-            {/* Account section */}
+
             <div>
               <h2 className="text-xs font-medium text-gray-400 mb-3 px-1">Account</h2>
               <div className="rounded-xl border border-gray-200 divide-y divide-gray-200 overflow-hidden">
@@ -88,7 +88,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Session section */}
+            
             <div className="mt-8">
               <h2 className="text-xs font-medium text-gray-400 mb-3 px-1">Session</h2>
               <div className="rounded-xl border border-gray-200 overflow-hidden">
@@ -112,7 +112,7 @@ export default function SettingsPage() {
         </main>
       </div>
 
-      {/* Logout Confirmation Modal */}
+      
       {showLogoutConfirm && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"

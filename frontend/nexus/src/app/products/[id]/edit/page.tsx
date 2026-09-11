@@ -184,7 +184,7 @@ export default function EditProductPage() {
                   </div>
                 )}
 
-                {/* Success Alert */}
+                
                 {success && (
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
                     <CheckCircle size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
@@ -192,7 +192,7 @@ export default function EditProductPage() {
                   </div>
                 )}
 
-                {/* Product Identity */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Product Identity</h2>
                   
@@ -219,7 +219,7 @@ export default function EditProductPage() {
                   </div>
                 </div>
 
-                {/* Version & Status */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Version & Status</h2>
                   
@@ -251,7 +251,7 @@ export default function EditProductPage() {
                   </div>
                 </div>
 
-                {/* Criticality & Ownership */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Criticality & Ownership</h2>
                   
@@ -283,7 +283,7 @@ export default function EditProductPage() {
                   </div>
                 </div>
 
-                {/* Descriptions */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Documentation</h2>
                   
@@ -311,7 +311,7 @@ export default function EditProductPage() {
                   </div>
                 </div>
 
-                {/* Technical Details */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Technical Details</h2>
                   

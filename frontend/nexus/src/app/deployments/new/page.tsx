@@ -129,7 +129,7 @@ export default function NewDeploymentPage() {
             Deployment Register
           </button>
 
-          {/* Header */}
+          
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Deployment Intake</h1>
             <p className="text-gray-600 text-sm">Record a new installation of a product at a client</p>

@@ -30,7 +30,6 @@ interface Option {
   name?: string;
 }
 
-// Environment badge — mirrors the rounded-pill badge style used for document type elsewhere in the app.
 function EnvironmentBadge({ stage }: { stage: string }) {
   const styles: Record<string, string> = {
     Production: "bg-green-100 text-green-700",
@@ -143,7 +142,7 @@ export default function DeploymentsPage() {
       .then((r) => r.json())
       .then(setProducts)
       .catch(() => setProducts([]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
   useEffect(() => {
@@ -165,7 +164,7 @@ export default function DeploymentsPage() {
 
         <main className="flex-1 px-12 py-8 overflow-auto">
 
-          {/* Header */}
+          
           <div className="flex items-start justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Deployment Register</h1>
@@ -182,7 +181,7 @@ export default function DeploymentsPage() {
             )}
           </div>
 
-          {/* Search + Filters */}
+          
           <div className="flex flex-wrap items-center gap-3 mb-6">
             <div className="relative flex-1 min-w-[220px] max-w-md">
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -239,7 +238,7 @@ export default function DeploymentsPage() {
             </select>
           </div>
 
-          {/* Error Alert */}
+          
           {error && (
             <div role="alert" className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
               <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -247,24 +246,24 @@ export default function DeploymentsPage() {
             </div>
           )}
 
-          {/* Table */}
+          
           <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
 
-            {/* Header */}
+            
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
               <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Deployments • <span className="font-bold text-gray-900">{deployments.length}</span> indexed
               </p>
             </div>
 
-            {/* Loading State */}
+            
             {loading && (
               <div className="px-6 py-12 text-center">
                 <p className="text-sm text-gray-600">Loading deployments…</p>
               </div>
             )}
 
-            {/* Empty State */}
+            
             {!loading && deployments.length === 0 && (
               <div className="px-6 py-12 text-center">
                 <Layers3 size={32} className="text-gray-300 mx-auto mb-3" />
@@ -274,7 +273,7 @@ export default function DeploymentsPage() {
               </div>
             )}
 
-            {/* Table Rows */}
+            
             <div className="divide-y divide-gray-200">
               {!loading &&
                 deployments.map((d) => (
@@ -283,7 +282,7 @@ export default function DeploymentsPage() {
                     href={`/deployments/${d.id}`}
                     className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors items-center"
                   >
-                    {/* Deployment / Client / Product */}
+                    
                     <div className="col-span-4 flex items-start gap-3">
                       <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 flex-shrink-0 mt-0.5">
                         <Layers3 size={18} strokeWidth={1.5} />
@@ -299,34 +298,34 @@ export default function DeploymentsPage() {
                       </div>
                     </div>
 
-                    {/* Version */}
+                    
                     <div className="col-span-1">
                       <p className="text-sm text-gray-700">{d.productVersion ? `v${d.productVersion}` : "—"}</p>
                     </div>
 
-                    {/* Modules */}
+                    
                     <div className="col-span-1">
                       <p className="text-sm text-gray-700">{d.modulesCount}</p>
                     </div>
 
-                    {/* Go-live */}
+                    
                     <div className="col-span-2">
                       <p className="text-xs text-gray-600">
                         {d.goLiveDate ? new Date(d.goLiveDate).toLocaleDateString() : "—"}
                       </p>
                     </div>
 
-                    {/* Status */}
+                    
                     <div className="col-span-2">
                       <StatusBadge status={d.deploymentStatus} />
                     </div>
 
-                    {/* Environment */}
+                    
                     <div className="col-span-1">
                       <EnvironmentBadge stage={d.currentStage} />
                     </div>
 
-                    {/* Chevron */}
+                    
                     <div className="col-span-1 flex justify-end">
                       <ChevronRight size={16} className="text-gray-400" />
                     </div>
@@ -335,7 +334,7 @@ export default function DeploymentsPage() {
             </div>
           </div>
 
-          {/* Results Count */}
+          
           {!loading && deployments.length > 0 && (
             <div className="mt-6 text-xs text-gray-600">
               Showing <span className="font-semibold text-gray-900">{deployments.length}</span> deployment{deployments.length === 1 ? "" : "s"}

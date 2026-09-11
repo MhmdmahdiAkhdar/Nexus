@@ -26,7 +26,7 @@ export default function NewClientPage() {
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Gate: only admins may access this page at all.
+  
   const [checkingAccess, setCheckingAccess] = useState(true);
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export default function NewClientPage() {
     "w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all";
   const labelClass = "text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2 block";
 
-  // While we verify the user is an admin, render nothing (avoids a flash of the form).
+  
   if (checkingAccess) {
     return (
       <div className="flex min-h-screen bg-white">
@@ -120,7 +120,7 @@ export default function NewClientPage() {
 
         <main className="flex-1 px-12 py-8 overflow-auto">
           
-          {/* Back Button */}
+          
           <button
             onClick={() => router.push("/clients")}
             className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold mb-6 transition-colors"
@@ -129,7 +129,7 @@ export default function NewClientPage() {
             Back to Clients
           </button>
 
-          {/* Header */}
+          
           <div className="mb-8">
             <div className="flex items-start justify-between">
               <div>
@@ -147,14 +147,14 @@ export default function NewClientPage() {
             </div>
           </div>
 
-          {/* Form Section */}
+          
           <div className="grid grid-cols-3 gap-8">
             
-            {/* Main Form */}
+            
             <form onSubmit={handleSubmit} className="col-span-2">
               <div className="bg-white border border-gray-300 rounded-lg p-8 space-y-6">
                 
-                {/* Error Alert */}
+                
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                     <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -162,7 +162,7 @@ export default function NewClientPage() {
                   </div>
                 )}
 
-                {/* Success Alert */}
+                
                 {success && (
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
                     <CheckCircle2 size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
@@ -170,7 +170,7 @@ export default function NewClientPage() {
                   </div>
                 )}
 
-                {/* Company Information */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Company Information</h2>
                   
@@ -198,7 +198,7 @@ export default function NewClientPage() {
                   </div>
                 </div>
 
-                {/* Location & Industry */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Location & Industry</h2>
                   
@@ -237,7 +237,7 @@ export default function NewClientPage() {
                   </div>
                 </div>
 
-                {/* Contact Information */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Primary Contact</h2>
                   
@@ -265,7 +265,7 @@ export default function NewClientPage() {
                   </div>
                 </div>
 
-                {/* Account Management */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Account Management</h2>
                   
@@ -293,7 +293,7 @@ export default function NewClientPage() {
                   </div>
                 </div>
 
-                {/* Status & Notes */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Status & Notes</h2>
                   
@@ -324,7 +324,7 @@ export default function NewClientPage() {
                   </div>
                 </div>
 
-                {/* Submit Button */}
+                
                 <div className="flex gap-4 pt-4 border-t border-gray-200">
                   <button
                     type="submit"
@@ -344,11 +344,11 @@ export default function NewClientPage() {
               </div>
             </form>
 
-            {/* Sidebar Guidance */}
+            
             <div className="col-span-1">
               <div className="sticky top-8 space-y-4">
                 
-                {/* Guidance Card */}
+                
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
                   <h3 className="text-sm font-bold text-blue-900 mb-3">Form Guide</h3>
                   <ul className="space-y-2.5 text-xs text-blue-800">
@@ -371,7 +371,7 @@ export default function NewClientPage() {
                   </ul>
                 </div>
 
-                {/* Info Card */}
+                
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                   <p className="text-xs text-amber-900 font-medium">
                     💡 <span className="block mt-1">After creating this client, you can link deployments and manage their relationship with your products.</span>

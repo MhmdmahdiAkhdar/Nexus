@@ -37,7 +37,6 @@ export default function Topbar() {
     return () => clearInterval(interval);
   }, []);
 
-  // Close either dropdown on an outside click or Escape, so they behave like real menus.
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
@@ -79,7 +78,7 @@ export default function Topbar() {
   return (
     <header className="h-16 bg-[#0F1419] border-b border-[#1F2937] text-white flex items-center justify-between px-8">
 
-      {/* Left Section - System Info */}
+      
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2 text-sm">
           <MapPin size={16} className="text-[#60A5FA]" />
@@ -99,20 +98,11 @@ export default function Topbar() {
         </div>
       </div>
 
-      {/* Right Section - Notifications & User */}
+      
       <div className="flex items-center gap-6">
 
-        {/* Notifications */}
+        
         <div className="relative" ref={notificationsRef}>
-          <button
-            onClick={() => setShowNotifications((v) => !v)}
-            aria-haspopup="true"
-            aria-expanded={showNotifications}
-            aria-label="Notifications"
-            className="p-2 text-gray-400 hover:text-[#60A5FA] hover:bg-[#1F2937] rounded-lg transition-all duration-200"
-          >
-            <Bell size={18} strokeWidth={1.5} />
-          </button>
 
           {showNotifications && (
             <div className="absolute right-0 top-full mt-2 w-80 bg-[#1F2937] border border-[#374151] rounded-lg shadow-2xl z-50">
@@ -130,7 +120,7 @@ export default function Topbar() {
 
         <div className="h-6 w-px bg-[#1F2937]" />
 
-        {/* User Menu */}
+        
         <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setShowUserMenu((v) => !v)}
@@ -151,7 +141,7 @@ export default function Topbar() {
             </div>
           </button>
 
-          {/* User Dropdown Menu */}
+          
           {showUserMenu && (
             <div className="absolute right-0 top-full mt-2 w-56 bg-[#1F2937] border border-[#374151] rounded-lg shadow-2xl z-50">
               <div className="p-4 border-b border-[#374151]">

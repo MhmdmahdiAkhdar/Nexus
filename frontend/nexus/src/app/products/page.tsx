@@ -121,7 +121,7 @@ export default function ProductsPage() {
     }, 300);
 
     return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [search, lifecycleFilter]);
 
   return (
@@ -133,7 +133,7 @@ export default function ProductsPage() {
 
         <main className="flex-1 px-12 py-8 overflow-auto">
           
-          {/* Header */}
+          
           <div className="mb-8">
             <div className="flex items-start justify-between mb-6">
               <div>
@@ -152,7 +152,7 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Search & Filter Section */}
+          
           <div className="mb-6 flex gap-4 items-end">
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
@@ -188,7 +188,7 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Error State */}
+          
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
               <span className="text-red-600 font-bold">!</span>
@@ -196,10 +196,10 @@ export default function ProductsPage() {
             </div>
           )}
 
-          {/* Products Table */}
+          
           <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
             
-            {/* Table Header */}
+          
             <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-300">
               <div className="col-span-4 text-xs font-semibold text-gray-700 uppercase tracking-wider">Product</div>
               <div className="col-span-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">Version</div>
@@ -208,7 +208,7 @@ export default function ProductsPage() {
               <div className="col-span-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">Team</div>
             </div>
 
-            {/* Loading State */}
+            
             {loading && (
               <div className="px-6 py-12 text-center">
                 <Package size={32} className="text-gray-300 mx-auto mb-3" />
@@ -216,7 +216,7 @@ export default function ProductsPage() {
               </div>
             )}
 
-            {/* Empty State */}
+            
             {!loading && products.length === 0 && (
               <div className="px-6 py-12 text-center">
                 <Package size={32} className="text-gray-300 mx-auto mb-3" />
@@ -226,7 +226,7 @@ export default function ProductsPage() {
               </div>
             )}
 
-            {/* Table Rows */}
+            
             <div className="divide-y divide-gray-200">
               {!loading &&
                 products.map((product) => (
@@ -235,7 +235,7 @@ export default function ProductsPage() {
                     href={`/products/${product.id}`}
                     className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer items-center group"
                   >
-                    {/* Product Info */}
+                    
                     <div className="col-span-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -250,24 +250,24 @@ export default function ProductsPage() {
                       </div>
                     </div>
 
-                    {/* Version */}
+
                     <div className="col-span-2">
                       <span className="text-sm text-gray-700 font-medium">
                         {product.currentVersion ? `v${product.currentVersion}` : "—"}
                       </span>
                     </div>
 
-                    {/* Status */}
+                    
                     <div className="col-span-2">
                       <LifecycleBadge status={product.lifecycleStatus} />
                     </div>
 
-                    {/* Criticality */}
+                    
                     <div className="col-span-2">
                       <CriticalityBadge level={product.criticality} />
                     </div>
 
-                    {/* Team */}
+                    
                     <div className="col-span-2 flex items-center justify-between">
                       <span className="text-sm text-gray-700">{product.accountableTeam}</span>
                       <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
@@ -277,7 +277,7 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Footer Info */}
+          
           {!loading && products.length > 0 && (
             <div className="mt-6 text-xs text-gray-600">
               Showing <span className="font-semibold text-gray-900">{products.length}</span> product{products.length === 1 ? "" : "s"}

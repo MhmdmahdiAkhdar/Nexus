@@ -51,7 +51,7 @@ export default function ReferenceIndexPage() {
   const [admin, setAdmin] = useState(false);
 
 
-  // Guards against out-of-order responses when the user types quickly.
+  
   const requestIdRef = useRef(0);
 
   const loadDocuments = useCallback(async () => {
@@ -81,7 +81,7 @@ export default function ReferenceIndexPage() {
       if (!res.ok) throw new Error();
       const data = await res.json();
 
-      // Ignore this response if a newer request has since been kicked off.
+      
       if (thisRequestId === requestIdRef.current) {
         setDocuments(data);
       }
@@ -103,8 +103,7 @@ export default function ReferenceIndexPage() {
   }, [loadDocuments]);
 
   async function handleDelete(doc: DocumentItem) {
-    // Defense-in-depth: even if this were somehow invoked, non-admins can't delete.
-    // (The real enforcement must also happen server-side in the DELETE endpoint.)
+    
     if (!admin) return;
     if (!window.confirm(`Remove "${doc.name}" from the reference index?`)) return;
 
@@ -132,7 +131,7 @@ export default function ReferenceIndexPage() {
 
         <main className="flex-1 px-12 py-8 overflow-auto">
 
-          {/* Header */}
+          
           <div className="flex items-start justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Reference Index</h1>
@@ -150,7 +149,7 @@ export default function ReferenceIndexPage() {
             )}
           </div>
 
-          {/* Search */}
+          
           <div className="mb-6">
             <div className="relative max-w-md">
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -164,7 +163,7 @@ export default function ReferenceIndexPage() {
             </div>
           </div>
 
-          {/* Error Alert */}
+          
           {error && (
             <div role="alert" className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
               <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -172,24 +171,24 @@ export default function ReferenceIndexPage() {
             </div>
           )}
 
-          {/* Table */}
+          
           <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
 
-            {/* Header */}
+            
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
               <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 External References • <span className="font-bold text-gray-900">{documents.length}</span> indexed
               </p>
             </div>
 
-            {/* Loading State */}
+            
             {loading && (
               <div className="px-6 py-12 text-center">
                 <p className="text-sm text-gray-600">Loading references…</p>
               </div>
             )}
 
-            {/* Empty State */}
+            
             {!loading && documents.length === 0 && (
               <div className="px-6 py-12 text-center">
                 <FileText size={32} className="text-gray-300 mx-auto mb-3" />
@@ -199,7 +198,7 @@ export default function ReferenceIndexPage() {
               </div>
             )}
 
-            {/* Table Rows */}
+            
             <div className="divide-y divide-gray-200">
               {!loading &&
                 documents.map((d) => {
@@ -209,7 +208,7 @@ export default function ReferenceIndexPage() {
                       key={d.id}
                       className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors items-center"
                     >
-                      {/* Document Info */}
+                      
                       <div className="col-span-5 flex items-start gap-3">
                         <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 flex-shrink-0 mt-0.5">
                           <FileText size={18} strokeWidth={1.5} />
@@ -224,26 +223,26 @@ export default function ReferenceIndexPage() {
                         </div>
                       </div>
 
-                      {/* Type */}
+                      
                       <div className="col-span-2">
                         <span className="inline-block text-xs font-medium px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full">
                           {d.documentType ?? "Reference"}
                         </span>
                       </div>
 
-                      {/* Owner */}
+                      
                       <div className="col-span-2">
                         <p className="text-sm text-gray-700">{d.ownerName}</p>
                       </div>
 
-                      {/* Date */}
+                      
                       <div className="col-span-1 text-right">
                         <p className="text-xs text-gray-600">
                           {d.lastUpdatedDate ? new Date(d.lastUpdatedDate).toLocaleDateString() : "—"}
                         </p>
                       </div>
 
-                      {/* Actions */}
+                      
                       <div className="col-span-2 flex items-center justify-end gap-1">
                         {link && (
                           <a
@@ -275,7 +274,7 @@ export default function ReferenceIndexPage() {
             </div>
           </div>
 
-          {/* Results Count */}
+          
           {!loading && documents.length > 0 && (
             <div className="mt-6 text-xs text-gray-600">
               Showing <span className="font-semibold text-gray-900">{documents.length}</span> reference{documents.length === 1 ? "" : "s"}
@@ -318,7 +317,6 @@ function AddReferenceModal({ onClose, onSaved }: { onClose: () => void; onSaved:
       .catch(() => setProductsError("Could not load products. Try reopening this dialog."));
   }, []);
 
-  // Focus the first field and let Escape close the dialog, like a native modal.
   useEffect(() => {
     firstFieldRef.current?.focus();
     function handleKeyDown(e: KeyboardEvent) {

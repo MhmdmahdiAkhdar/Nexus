@@ -101,7 +101,7 @@ export default function ClientsPage() {
 
     const timeout = setTimeout(() => loadClients(), 300);
     return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [search, statusFilter]);
 
   return (
@@ -113,7 +113,7 @@ export default function ClientsPage() {
 
         <main className="flex-1 px-12 py-8 overflow-auto">
           
-          {/* Header */}
+          
           <div className="flex items-start justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Client Register</h1>
@@ -132,7 +132,7 @@ export default function ClientsPage() {
             
           </div>
 
-          {/* Search & Filter */}
+          
           <div className="mb-6 flex gap-4 items-end">
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
@@ -168,7 +168,7 @@ export default function ClientsPage() {
             </div>
           </div>
 
-          {/* Error Alert */}
+          
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
               <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -176,10 +176,10 @@ export default function ClientsPage() {
             </div>
           )}
 
-          {/* Table */}
+          
           <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
             
-            {/* Table Header */}
+            
             <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200">
               <div className="col-span-4 text-xs font-semibold text-gray-700 uppercase tracking-wider">Company</div>
               <div className="col-span-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">Country</div>
@@ -188,14 +188,14 @@ export default function ClientsPage() {
               <div className="col-span-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</div>
             </div>
 
-            {/* Loading State */}
+            
             {loading && (
               <div className="px-6 py-12 text-center">
                 <p className="text-sm text-gray-600">Loading clients…</p>
               </div>
             )}
 
-            {/* Empty State */}
+            
             {!loading && clients.length === 0 && (
               <div className="px-6 py-12 text-center">
                 <Building2 size={32} className="text-gray-300 mx-auto mb-3" />
@@ -205,7 +205,7 @@ export default function ClientsPage() {
               </div>
             )}
 
-            {/* Table Rows */}
+            
             <div className="divide-y divide-gray-200">
               {!loading &&
                 clients.map((client) => (
@@ -214,7 +214,7 @@ export default function ClientsPage() {
                     href={`/clients/${client.id}`}
                     className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors items-center group"
                   >
-                    {/* Company */}
+                    
                     <div className="col-span-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 flex-shrink-0">
@@ -227,22 +227,22 @@ export default function ClientsPage() {
                       </div>
                     </div>
 
-                    {/* Country */}
+                    
                     <div className="col-span-2">
                       <span className="text-sm text-gray-700">{client.country ?? "—"}</span>
                     </div>
 
-                    {/* Contact */}
+                    
                     <div className="col-span-2">
                       <span className="text-sm text-gray-700">{client.primaryContactName ?? "—"}</span>
                     </div>
 
-                    {/* Deployments */}
+                    
                     <div className="col-span-2">
                       <span className="text-sm text-gray-700">{client.deploymentsLabel}</span>
                     </div>
 
-                    {/* Status */}
+                    
                     <div className="col-span-2 flex items-center justify-between">
                       <StatusBadge status={client.status} />
                       <ChevronRight size={18} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
@@ -252,7 +252,7 @@ export default function ClientsPage() {
             </div>
           </div>
 
-          {/* Footer Info */}
+          
           {!loading && clients.length > 0 && (
             <div className="mt-6 text-xs text-gray-600">
               Showing <span className="font-semibold text-gray-900">{clients.length}</span> client{clients.length === 1 ? "" : "s"}

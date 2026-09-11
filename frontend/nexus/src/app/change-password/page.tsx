@@ -73,18 +73,18 @@ export default function ChangePasswordPage() {
     <div className="min-h-screen bg-white flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         
-        {/* Header */}
+        
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Change Password</h1>
           <p className="text-gray-600 text-sm">Update your account password to keep it secure</p>
         </div>
 
-        {/* Form Card */}
+        
         <div className="bg-white border border-gray-300 rounded-lg p-8 space-y-5">
           
           <form onSubmit={handleSubmit} className="space-y-5">
             
-            {/* Current Password */}
+            
             <div>
               <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
                 Current Password
@@ -109,7 +109,7 @@ export default function ChangePasswordPage() {
               </div>
             </div>
 
-            {/* New Password */}
+            
             <div>
               <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
                 New Password
@@ -134,7 +134,7 @@ export default function ChangePasswordPage() {
               </div>
             </div>
 
-            {/* Confirm Password */}
+            
             <div>
               <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
                 Confirm New Password
@@ -159,7 +159,7 @@ export default function ChangePasswordPage() {
               </div>
             </div>
 
-            {/* Error Alert */}
+            
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                 <AlertCircle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -167,7 +167,7 @@ export default function ChangePasswordPage() {
               </div>
             )}
 
-            {/* Success Alert */}
+            
             {success && (
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
                 <CheckCircle2 size={16} className="text-green-600 flex-shrink-0 mt-0.5" />
@@ -175,7 +175,7 @@ export default function ChangePasswordPage() {
               </div>
             )}
 
-            {/* Submit Button */}
+            
             <button
               type="submit"
               disabled={loading}
@@ -186,7 +186,7 @@ export default function ChangePasswordPage() {
             </button>
           </form>
 
-          {/* Password Requirements */}
+          
           <div className="pt-4 border-t border-gray-200">
             <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3">
               Password Requirements
@@ -204,7 +204,7 @@ export default function ChangePasswordPage() {
           </div>
         </div>
 
-        {/* Help Text */}
+        
         <p className="text-xs text-gray-600 text-center mt-6">
           Having trouble? <a href="/settings" className="text-blue-600 hover:text-blue-800 font-semibold">Contact support</a>
         </p>

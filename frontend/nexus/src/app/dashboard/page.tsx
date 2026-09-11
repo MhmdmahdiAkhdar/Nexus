@@ -107,7 +107,7 @@ export default function DashboardPage() {
           return;
         }
       } catch {
-        // ignore malformed cache
+        // do nothing
       }
     }
 
@@ -163,7 +163,7 @@ export default function DashboardPage() {
         <main className="flex-1 px-8 py-14 overflow-auto">
           <div className="max-w-6xl mx-auto">
             
-            {/* Header */}
+            
             <div className="mb-10">
               <div className="text-sm text-slate-400 mb-3">Nexus / Dashboard</div>
               <h1 className="text-4xl leading-tight font-semibold text-slate-900 tracking-tight">
@@ -174,7 +174,7 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            {/* Error Alert */}
+            
             {error && (
               <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                 <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -182,7 +182,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Stats Section */}
+            
             {loading ? (
               <div className="text-sm text-slate-400 mb-10">Loading dashboard…</div>
             ) : (
@@ -210,10 +210,10 @@ export default function DashboardPage() {
               )
             )}
 
-            {/* Main Content Grid */}
+            
             <div className="grid grid-cols-3 gap-8">
               
-              {/* Recent Products */}
+              
               <div className="col-span-2">
                 <div className="flex items-center justify-between mb-4 px-0.5">
                   <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Recent Products</h2>
@@ -265,10 +265,10 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Right Sidebar */}
+              
               <div className="flex flex-col gap-8">
                 
-                {/* Needs Attention */}
+                
                 <div>
                   <h2 className="text-xs font-semibold text-slate-600 mb-4 px-0.5 uppercase tracking-wider">Needs Attention</h2>
                   <div className="rounded-lg border border-slate-200 overflow-hidden">
@@ -315,7 +315,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Environment Readiness */}
+                
                 <div>
                   <h2 className="text-xs font-semibold text-slate-600 mb-4 px-0.5 uppercase tracking-wider">Environment Status</h2>
                   <div className="rounded-lg border border-slate-200 p-5">

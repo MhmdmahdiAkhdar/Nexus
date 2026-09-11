@@ -72,7 +72,7 @@ export default function AccessControlPage() {
       }
     }
     init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
   async function toggleActive(user: UserItem) {
@@ -146,7 +146,7 @@ export default function AccessControlPage() {
 
         <main className="flex-1 px-8 py-14 overflow-auto">
           <div className="max-w-6xl mx-auto">
-            {/* Header */}
+            
             <div className="mb-10">
               <div className="text-sm text-slate-400 mb-3">Nexus / Settings / Access control</div>
               <h1 className="text-[28px] leading-tight font-semibold text-slate-900 tracking-tight">
@@ -157,7 +157,7 @@ export default function AccessControlPage() {
               </p>
             </div>
 
-            {/* Error Alert */}
+            
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                 <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -165,9 +165,9 @@ export default function AccessControlPage() {
               </div>
             )}
 
-            {/* Content Grid */}
+            
             <div className="grid grid-cols-3 gap-8">
-              {/* Users List */}
+              
               <div className="col-span-2">
                 <div className="flex items-baseline justify-between mb-3 px-0.5">
                   <h2 className="text-[13px] font-medium text-slate-500">Employee accounts</h2>
@@ -242,9 +242,9 @@ export default function AccessControlPage() {
                 </div>
               </div>
 
-              {/* Sidebar */}
+              
               <div className="space-y-8">
-                {/* Invite Form */}
+                
                 <div>
                   <h2 className="text-[13px] font-medium text-slate-500 mb-3 px-0.5">
                     Create account
@@ -363,38 +363,6 @@ export default function AccessControlPage() {
                   </div>
                 </div>
 
-                {/* Permission Sets */}
-                <div>
-                  <h2 className="text-[13px] font-medium text-slate-500 mb-3 px-0.5">
-                    Permission sets
-                  </h2>
-                  <div className="rounded-lg border border-slate-200 p-5">
-                    {roles.length === 0 ? (
-                      <p className="text-[14px] text-slate-400">No permission sets available.</p>
-                    ) : (
-                      <div className="space-y-1">
-                        {roles.map((r, i) => (
-                          <div
-                            key={r.id}
-                            className={`flex items-center justify-between py-2.5 ${
-                              i !== roles.length - 1 ? "border-b border-slate-100" : ""
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <Shield size={14} className="text-slate-400" />
-                              <span className="text-[14px] font-medium text-slate-900">
-                                {r.name}
-                              </span>
-                            </div>
-                            <span className="text-[12px] text-slate-400">
-                              {r.permissionsCount} permissions
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
               </div>
             </div>
           </div>

@@ -105,7 +105,7 @@ export default function ClientDossierPage() {
     }
 
     init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [clientId]);
 
   async function handleDeleteClient() {
@@ -159,7 +159,7 @@ export default function ClientDossierPage() {
 
         <main className="flex-1 px-12 py-8 overflow-auto">
           
-          {/* Back Button */}
+          
           <button
             onClick={() => router.push("/clients")}
             className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold mb-6 transition-colors"
@@ -168,7 +168,7 @@ export default function ClientDossierPage() {
             Back to Clients
           </button>
 
-          {/* Header */}
+          
           <div className="mb-8">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -199,17 +199,17 @@ export default function ClientDossierPage() {
               
             </div>
 
-            {/* Status Badge */}
+            
             <StatusBadge status={detail.status} />
           </div>
 
-          {/* Content Grid */}
+          
           <div className="grid grid-cols-3 gap-8">
             
-            {/* Left Column - Client Info */}
+            
             <div className="col-span-2 space-y-6">
               
-              {/* Company Overview */}
+              
               <div className="bg-white border border-gray-300 rounded-lg p-6">
                 <div className="flex items-start gap-4 mb-6">
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
@@ -221,7 +221,7 @@ export default function ClientDossierPage() {
                   </div>
                 </div>
 
-                {/* Info Grid */}
+                
                 <div className="grid grid-cols-2 gap-6 pt-6 border-t border-gray-200">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -256,13 +256,13 @@ export default function ClientDossierPage() {
                   </div>
                 </div>
 
-                {/* Timeline */}
+                
                 <div className="pt-6 mt-6 border-t border-gray-200">
                   <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 block">Client Since</span>
                   <p className="text-sm text-gray-700">{new Date(detail.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
                 </div>
 
-                {/* Notes */}
+                
                 {detail.notes && (
                   <div className="pt-6 mt-6 border-t border-gray-200">
                     <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 block">Notes</span>
@@ -285,7 +285,7 @@ export default function ClientDossierPage() {
                   <p className="text-xs text-gray-600">Deployments attached to this client</p>
                 </div>
 
-                {/* Content */}
+                
                 {detail.connectedProducts.length === 0 && (
                   <div className="px-6 py-12 text-center">
                     <Package size={32} className="text-gray-300 mx-auto mb-3" />

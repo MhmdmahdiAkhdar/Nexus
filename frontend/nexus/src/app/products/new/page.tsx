@@ -101,7 +101,7 @@ export default function NewProductPage() {
 
         <main className="flex-1 px-12 py-8 overflow-auto">
           
-          {/* Back Button */}
+          
           <button
             onClick={() => router.push("/products")}
             className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold mb-6 transition-colors"
@@ -110,7 +110,7 @@ export default function NewProductPage() {
             Back to Products
           </button>
 
-          {/* Header */}
+          
           <div className="mb-8">
             <div className="flex items-start justify-between">
               <div>
@@ -127,14 +127,14 @@ export default function NewProductPage() {
             </div>
           </div>
 
-          {/* Form Section */}
+          
           <div className="grid grid-cols-3 gap-8">
             
-            {/* Main Form */}
+            
             <form onSubmit={handleSubmit} className="col-span-2">
               <div className="bg-white border border-gray-300 rounded-lg p-8 space-y-6">
                 
-                {/* Error Alert */}
+                
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                     <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -142,7 +142,7 @@ export default function NewProductPage() {
                   </div>
                 )}
 
-                {/* Success Alert */}
+                
                 {success && (
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
                     <CheckCircle size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
@@ -150,7 +150,7 @@ export default function NewProductPage() {
                   </div>
                 )}
 
-                {/* Core Information */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Core Information</h2>
                   
@@ -178,7 +178,7 @@ export default function NewProductPage() {
                   </div>
                 </div>
 
-                {/* Version & Status */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Version & Status</h2>
                   
@@ -206,7 +206,7 @@ export default function NewProductPage() {
                   </div>
                 </div>
 
-                {/* Criticality & Ownership */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Criticality & Ownership</h2>
                   
@@ -234,7 +234,7 @@ export default function NewProductPage() {
                   </div>
                 </div>
 
-                {/* Descriptions */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Description</h2>
                   
@@ -262,7 +262,7 @@ export default function NewProductPage() {
                   </div>
                 </div>
 
-                {/* Technical Information */}
+                
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Technical Details</h2>
                   
@@ -290,7 +290,7 @@ export default function NewProductPage() {
                   </div>
                 </div>
 
-                {/* Additional Notes */}
+                
                 <div>
                   <label className={labelClass}>Additional Notes</label>
                   <textarea
@@ -302,7 +302,7 @@ export default function NewProductPage() {
                   />
                 </div>
 
-                {/* Submit Button */}
+                
                 <div className="flex gap-4 pt-4">
                   <button
                     type="submit"
@@ -322,11 +322,11 @@ export default function NewProductPage() {
               </div>
             </form>
 
-            {/* Sidebar Guidance */}
+            
             <div className="col-span-1">
               <div className="sticky top-8 space-y-4">
                 
-                {/* Guidance Card */}
+                
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
                   <h3 className="text-sm font-bold text-blue-900 mb-3">Form Guide</h3>
                   <ul className="space-y-2.5 text-xs text-blue-800">
@@ -349,7 +349,7 @@ export default function NewProductPage() {
                   </ul>
                 </div>
 
-                {/* Info Card */}
+                
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                   <p className="text-xs text-amber-900 font-medium">
                     💡 <span className="block mt-1">After saving, you can add deployments, team members, and technical details from the product detail page.</span>

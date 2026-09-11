@@ -114,7 +114,7 @@ export default function TeamPage() {
 
         <main className="flex-1 px-8 py-14 overflow-auto">
           <div className="max-w-6xl mx-auto">
-            {/* Header */}
+            
             <div className="flex items-start justify-between mb-10 gap-6">
               <div>
                 <div className="text-sm text-slate-400 mb-3">Nexus / People & ownership</div>
@@ -137,7 +137,7 @@ export default function TeamPage() {
               )}
             </div>
 
-            {/* Search */}
+            
             <div className="mb-6">
               <div className="relative max-w-md">
                 <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -150,7 +150,7 @@ export default function TeamPage() {
               </div>
             </div>
 
-            {/* Error State */}
+            
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                 <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -158,9 +158,9 @@ export default function TeamPage() {
               </div>
             )}
 
-            {/* Table */}
+            
             <div className="rounded-lg border border-slate-200 overflow-hidden">
-              {/* Table Header */}
+            
               <div className="grid grid-cols-5 gap-4 px-5 py-3 bg-slate-50 border-b border-slate-200">
                 <div className="text-[12px] font-medium text-slate-500">Employee</div>
                 <div className="text-[12px] font-medium text-slate-500">Role</div>
@@ -191,7 +191,7 @@ export default function TeamPage() {
                       key={m.id}
                       className="grid grid-cols-5 gap-4 px-5 py-4 hover:bg-slate-50 transition-colors items-center"
                     >
-                      {/* Employee */}
+                
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-full bg-[#2451B0] text-white flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
                           {initials(m.fullName)}
@@ -203,7 +203,7 @@ export default function TeamPage() {
                         </div>
                       </div>
 
-                      {/* Role & Department */}
+                      
                       <div className="min-w-0">
                         <div className="text-[14px] text-slate-900 truncate">{m.jobTitle ?? "—"}</div>
                         {m.department && (
@@ -213,19 +213,19 @@ export default function TeamPage() {
                         )}
                       </div>
 
-                      {/* Responsible Products */}
+                      
                       <div className="min-w-0">
                         <p className="text-[14px] text-slate-600 truncate">{m.responsibleProducts}</p>
                       </div>
 
-                      {/* Responsibility Type */}
+                      
                       <div className="min-w-0">
                         <p className="text-[14px] text-slate-600 truncate">
                           {m.responsibilityType ?? "—"}
                         </p>
                       </div>
 
-                      {/* Status */}
+                      
                       <div>
                         <StatusBadge status={m.status} />
                       </div>
@@ -234,7 +234,7 @@ export default function TeamPage() {
               </div>
             </div>
 
-            {/* Results Count */}
+        
             {!loading && members.length > 0 && (
               <div className="mt-4 text-[13px] text-slate-400">
                 Showing {members.length} team member{members.length === 1 ? "" : "s"}

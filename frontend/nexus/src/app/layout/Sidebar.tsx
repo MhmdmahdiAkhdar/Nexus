@@ -61,7 +61,6 @@ export default function Sidebar() {
   return (
     <aside className="w-64 min-h-screen bg-[#0F1419] border-r border-[#1F2937] flex flex-col">
 
-      {/* Header Logo */}
       <div className="px-6 py-8 border-b border-[#1F2937]">
         <div className="flex items-end gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] rounded-lg flex items-center justify-center shadow-lg border border-[#3B82F6]/30">
@@ -88,7 +87,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Main Navigation */}
+      
       <nav className="flex-1 px-3 py-6 space-y-1">
         <div className="px-3 mb-4">
           <p className="text-xs font-semibold text-gray-500 tracking-widest uppercase">Navigation</p>
@@ -128,12 +127,12 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Divider */}
+      
       <div className="px-3 mb-2">
         <div className="h-px bg-[#1F2937]" />
       </div>
 
-      {/* Settings Section */}
+      
       <nav className="px-3 py-4 border-t border-[#1F2937]">
         <div className="px-3 mb-3">
           <p className="text-xs font-semibold text-gray-500 tracking-widest uppercase">Admin</p>
@@ -167,7 +166,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Security Info Box */}
+      
       <div className="mx-3 mb-6 p-4 bg-[#1F2937] border border-[#374151] rounded-lg backdrop-blur-sm">
         <div className="flex items-start gap-2.5">
           <Lock size={16} className="text-[#60A5FA] mt-0.5 flex-shrink-0" />
@@ -180,7 +179,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Footer */}
+      
       <div className="px-6 py-4 border-t border-[#1F2937]">
         <p className="text-xs text-gray-400 font-mono">BUILD 2.6.14</p>
         <p className="text-xs text-gray-500 mt-1 font-light">IDS Enterprise System</p>

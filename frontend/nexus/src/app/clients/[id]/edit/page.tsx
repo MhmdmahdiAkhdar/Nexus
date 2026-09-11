@@ -139,7 +139,7 @@ export default function EditClientPage() {
 
         <main className="flex-1 px-12 py-8 overflow-auto">
           
-          {/* Back Button */}
+        
           <button
             onClick={() => router.push(`/clients/${clientId}`)}
             className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold mb-6 transition-colors"
@@ -148,7 +148,7 @@ export default function EditClientPage() {
             Back to Client
           </button>
 
-          {/* Header */}
+        
           <div className="mb-8">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -168,14 +168,14 @@ export default function EditClientPage() {
             </div>
           </div>
 
-          {/* Form Section */}
+        
           <div className="grid grid-cols-3 gap-8">
             
-            {/* Main Form */}
+          
             <form onSubmit={handleSubmit} className="col-span-2">
               <div className="bg-white border border-gray-300 rounded-lg p-8 space-y-6">
                 
-                {/* Error Alert */}
+              
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                     <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -183,7 +183,7 @@ export default function EditClientPage() {
                   </div>
                 )}
 
-                {/* Success Alert */}
+              
                 {success && (
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
                     <CheckCircle2 size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
@@ -191,7 +191,7 @@ export default function EditClientPage() {
                   </div>
                 )}
 
-                {/* Company Information */}
+              
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Company Information</h2>
                   
@@ -218,7 +218,7 @@ export default function EditClientPage() {
                   </div>
                 </div>
 
-                {/* Location & Industry */}
+              
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Location & Industry</h2>
                   
@@ -254,7 +254,7 @@ export default function EditClientPage() {
                   </div>
                 </div>
 
-                {/* Contact Information */}
+              
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Primary Contact</h2>
                   
@@ -280,7 +280,7 @@ export default function EditClientPage() {
                   </div>
                 </div>
 
-                {/* Account Management */}
+              
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Account Management</h2>
                   
@@ -306,7 +306,7 @@ export default function EditClientPage() {
                   </div>
                 </div>
 
-                {/* Status & Notes */}
+              
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Status & Notes</h2>
                   
@@ -336,7 +336,7 @@ export default function EditClientPage() {
                   </div>
                 </div>
 
-                {/* Submit Button */}
+              
                 <div className="flex gap-4 pt-4 border-t border-gray-200">
                   <button
                     type="submit"
@@ -356,11 +356,11 @@ export default function EditClientPage() {
               </div>
             </form>
 
-            {/* Sidebar Guidance */}
+          
             <div className="col-span-1">
               <div className="sticky top-8 space-y-4">
                 
-                {/* Editing Guide */}
+              
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
                   <h3 className="text-sm font-bold text-blue-900 mb-3">Editing Guidelines</h3>
                   <ul className="space-y-2.5 text-xs text-blue-800">
@@ -383,7 +383,7 @@ export default function EditClientPage() {
                   </ul>
                 </div>
 
-                {/* Info Card */}
+              
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                   <p className="text-xs text-amber-900 font-medium">
                     💡 <span className="block mt-1">All changes to this client record are saved automatically in the change history.</span>

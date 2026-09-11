@@ -177,7 +177,7 @@ export default function ProductDossierPage() {
     }
 
     init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [productId]);
 
   useEffect(() => {
@@ -260,7 +260,7 @@ export default function ProductDossierPage() {
 
         <main className="flex-1 px-12 py-8 overflow-auto">
           
-          {/* Back Button */}
+          
           <button
             onClick={() => router.push("/products")}
             className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold mb-6 transition-colors"
@@ -269,7 +269,7 @@ export default function ProductDossierPage() {
             Back to Products
           </button>
 
-          {/* Header */}
+          
           <div className="mb-8">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -304,14 +304,14 @@ export default function ProductDossierPage() {
               )}
             </div>
 
-            {/* Status Badges */}
+            
             <div className="flex gap-2">
               <LifecycleBadge status={detail.lifecycleStatus} />
               <CriticalityBadge level={detail.criticality} />
             </div>
           </div>
 
-          {/* Tabs */}
+          
           <div className="border-b border-gray-200 mb-8">
             <div className="flex gap-8">
               {TABS.map((t) => (
@@ -330,12 +330,12 @@ export default function ProductDossierPage() {
             </div>
           </div>
 
-          {/* Tab Content */}
+          
           {tab === "Overview" && (
             <div className="grid grid-cols-3 gap-8">
               <div className="col-span-2 space-y-6">
                 
-                {/* Description */}
+                
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Product Information</h2>
                   
@@ -361,7 +361,7 @@ export default function ProductDossierPage() {
                   )}
                 </div>
 
-                {/* Technical Details */}
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
                     <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Current Version</h3>
@@ -388,7 +388,7 @@ export default function ProductDossierPage() {
                   </div>
                 </div>
 
-                {/* Modules */}
+                
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-gray-900">Modules</h2>
@@ -440,7 +440,7 @@ export default function ProductDossierPage() {
                   </div>
                 </div>
 
-                {/* Repositories */}
+                
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-gray-900">Repositories</h2>
@@ -460,10 +460,10 @@ export default function ProductDossierPage() {
                 </div>
               </div>
 
-              {/* Sidebar */}
+              
               <div className="space-y-6">
                 
-                {/* Responsible People */}
+                
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-gray-900">Responsibility</h2>
@@ -637,7 +637,7 @@ export default function ProductDossierPage() {
         </main>
       </div>
 
-      {/* Modals */}
+      
       {showAddModule && (
         <ModuleFormModal
           productId={productId}
@@ -1256,7 +1256,7 @@ function ManageRepositoriesModal({ productId, onClose }: { productId: string; on
 
   useEffect(() => {
     loadRepos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
   function startEdit(repo: RepositoryFull) {
