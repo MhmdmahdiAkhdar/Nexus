@@ -268,84 +268,8 @@ export default function DashboardPage() {
               
               <div className="flex flex-col gap-8">
                 
-                
                 <div>
-                  <h2 className="text-xs font-semibold text-slate-600 mb-4 px-0.5 uppercase tracking-wider">Needs Attention</h2>
-                  <div className="rounded-lg border border-slate-200 overflow-hidden">
-                    {attentionItems.length === 0 && (
-                      <div className="px-5 py-10 text-center">
-                        <ShieldCheck size={22} className="text-emerald-500 mx-auto mb-2" strokeWidth={1.75} />
-                        <p className="text-xs text-slate-500 font-medium">All systems healthy</p>
-                      </div>
-                    )}
-
-                    <div className="divide-y divide-slate-200">
-                      {attentionItems.map((item) => (
-                        <div
-                          key={item.deploymentId}
-                          className="px-4 py-4 hover:bg-amber-50/40 transition-colors border-l-2 border-l-amber-400"
-                        >
-                          <div className="flex gap-3 items-start">
-                            <AlertCircle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
-                            <div className="min-w-0 flex-1">
-                              <div className="text-sm font-semibold text-slate-900 truncate">
-                                {item.productName}
-                              </div>
-                              <div className="text-xs text-slate-500 mt-0.5 truncate">
-                                {item.clientName}
-                              </div>
-                              <div className="text-xs text-slate-700 font-medium mt-2">
-                                {item.deploymentStatus}
-                              </div>
-                              {item.goLiveDate && (
-                                <div className="text-xs text-amber-700 font-medium mt-1">
-                                  Go-live:{" "}
-                                  {new Date(item.goLiveDate).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                
-                <div>
-                  <h2 className="text-xs font-semibold text-slate-600 mb-4 px-0.5 uppercase tracking-wider">Environment Status</h2>
-                  <div className="rounded-lg border border-slate-200 p-5">
-                    {readiness && (
-                      <>
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <div className="text-sm font-bold text-slate-900">
-                              {readiness.configuredEnvironments} of {readiness.totalEnvironments}
-                            </div>
-                            <div className="text-xs text-slate-500 mt-0.5">
-                              environments configured
-                            </div>
-                          </div>
-                          <ShieldCheck size={18} className="text-emerald-500" strokeWidth={1.75} />
-                        </div>
-
-                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-3">
-                          <div
-                            className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-                            style={{ width: `${readiness.percentageConfigured}%` }}
-                          />
-                        </div>
-
-                        <p className="text-xs text-slate-500">
-                          {readiness.percentageConfigured}% ready for production
-                        </p>
-                      </>
-                    )}
-                  </div>
+                  
                 </div>
               </div>
             </div>
