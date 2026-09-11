@@ -1,0 +1,25 @@
+## .NET build output
+bin/
+obj/
+*.user
+*.suo
+
+## Visual Studio / VS Code
+.vs/
+.vscode/
+*.rsuser
+
+## Rider / IntelliJ
+.idea/
+*.sln.iml
+
+## Logs
+*.log
+
+## OS files
+.DS_Store
+Thumbs.db
+
+## Local secrets/config overrides (see below)
+appsettings.Local.json
+appsettings.*.local.json
